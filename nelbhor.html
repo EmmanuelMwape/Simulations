@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Nel Bhor's Atomic Model</title>
+  <style>
+    canvas {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+  <h1>Nel Bhor's Atomic Model Simulation</h1>
+  <p>Enter the number of electrons to visualize the electronic configuration:</p>
+  <form>
+    Electrons: <input type="number" id="electronInput" min="1">
+    <input type="button" value="Submit" onclick="drawModel()">
+  </form>
+  <canvas id="canvas" width="400" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    function drawModel() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const totalElectrons = parseInt(document.getElementById('electronInput').value);
+
+      if (isNaN(totalElectrons) || totalElectrons < 1) {
+        alert('Invalid number of electrons. Please enter a positive integer.');
+        return;
+      }
+
+      let remainingElectrons = totalElectrons;
+      const orbitRadius = 20;
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+
+      for (let orbit = 1; remainingElectrons > 0; orbit++) {
+        const electronsInOrbit = Math.min(2 * orbit ** 2, remainingElectrons);
+        const orbitColor = getRandomColor();
+        drawOrbit(centerX, centerY, orbit * orbitRadius, orbitColor);
+
+        for (let electron = 1; electron <= electronsInOrbit; electron++) {
+          const electronAngle = (2 * Math.PI * electron) / electronsInOrbit;
+          const electronX = centerX + orbit * orbitRadius * Math.cos(electronAngle);
+          const electronY = centerY + orbit * orbitRadius * Math.sin(electronAngle);
+          const electronColor = getRandomColor();
+          drawElectron(electronX, electronY, 5, electronColor);
+        }
+
+        remainingElectrons -= electronsInOrbit;
+      }
+    }
+
+    function drawOrbit(x, y, radius, color) {
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, 2 * Math.PI);
+      ctx.strokeStyle = color;
+      ctx.stroke();
+    }
+
+    function drawElectron(x, y, radius, color) {
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, 2 * Math.PI);
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    function getRandomColor() {
+      return '#' + Math.floor(Math.random() * 16777215).toString(16);
+    }
+  </script>
+</body>
+</html>

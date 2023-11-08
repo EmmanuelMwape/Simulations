@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Graphing Simulation</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+<style>
+anvas {
+    border: 1px solid #ccc;
+    background-color: #fff;
+	
+}
+.rotatable-image {
+  width: 100%;
+  height: 100%;
+}
+/* CSS class for bg-goldenrod */
+.bg-goldenrod {
+  /* Background color */
+  background-color: goldenrod;
+  
+  /* Text color */
+  color: white;
+
+  /* Font size */
+  font-size: 2.5rem; /* Bootstrap display-4 font size */
+  
+  /* Font family */
+  font-family: Arial, sans-serif;
+  
+  /* Text shadow */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  
+  /* Box shadow for the container */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+ 
+    .inline-label {
+        /* Add styling for the inline label */
+        font-weight: bold;
+        font-size: 32px;
+		float:right;
+        margin-right: 10px; /* Adjust the spacing between the label and content */
+    }
+</style>
+
+</style>
+</head>
+<body>
+<div class="container">
+<div class="jumbotron jumbotron-fluid bg-light text-dark text-center py-2">
+<h1 class="display-5">Mathematical Function Plotter</h1>
+<p class="lead">Mathematical Functions Visualizing  </p>
+<body>
+    <div>
+        <label hidden for="gridSize">Grid Size:</label>
+        <input hidden type="number" id="gridSize" value="25">
+        <label for="axisRange">Axis Range:</label>
+        <input type="number" id="axisRange" value="25">
+        <label hidden for="dottedLine">Dotted Line:</label>
+        <input hidden type="checkbox" id="dottedLine">
+        <label hidden for="zoom">Zoom:</label>
+        <input hidden type="range" id="zoom" min="1" max="5" step="0.1" value="1">
+        <label for="graphType">Graph Type:</label>
+        <select id="graphType">
+            <option value="lines">Lines</option>
+            <option value="dots">Dots</option>
+            <option value="dottedLines">Dotted Lines</option>
+        </select>
+        <button onclick="plotGraphOnButtonClick()">Plot</button>
+    </div>
+	<div  class="container mt-2 bg-goldenrod d-flex align-items-center text-center">
+       <span style="float:right"class="inline-label">f(x)= </span><div id="functionInput" class=" mt-3 bg-goldenrod" contenteditable="true" style="width: 300px; height: 60px; padding: 5px; border: 1px solid #cceecc;">
+    </div>
+    </div>
+    </div>
+    <div style="justify-content: center;
+            align-items: center"class="container d-flex">
+	<canvas  class="mt-2" id="graphCanvas" width="700" height="700"></canvas>
+	</div>
+    <script>
+	const canvas = document.getElementById('graphCanvas')
+	const context = canvas.getContext('2d');
+        // Function to draw the graph paper
+        function drawGraphPaper(canvas, gridSize, color) {
+            //const context = canvas.getContext('2d');
+
+            context.beginPath();
+            context.strokeStyle = color;
+
+            // Draw vertical lines
+            for (let x = 0; x <= canvas.width; x += gridSize) {
+                context.moveTo(x, 0);
+                context.lineTo(x, canvas.height);
+            }
+
+            // Draw horizontal lines
+            for (let y = 0; y <= canvas.height; y += gridSize) {
+                context.moveTo(0, y);
+                context.lineTo(canvas.width, y);
+            }
+
+            context.stroke();
+        }
+
+        // Function to draw the x and y axes
+        function drawAxes(canvas, gridSize, color, axisRange) {
+            //const context = canvas.getContext('2d');
+
+            context.beginPath();
+            context.strokeStyle = color;
+            context.lineWidth = 2;
+
+            const centerX = 700 / 2;
+            const centerY = 700 / 2;
+
+            // Draw x-axis
+            context.moveTo(0, centerY);
+            context.lineTo(700, centerY);
+
+            // Draw y-axis
+            context.moveTo(centerX, 0);
+            context.lineTo(centerX, 700);
+
+            context.stroke();
+
+            // Draw labels and numbers for x-axis
+            const xStep =25;
+            for (let x = -12; x <= 12; x++) {
+                const xPos = centerX + x * xStep;
+                context.fillText(2*x.toString(), xPos - 1, centerY + 15);
+            }
+
+            // Draw labels and numbers for y-axis
+            const yStep = 25;
+            for (let y = -12; y <= 12; y++) {
+                if (y !== 0) {
+                    const yPos = centerY - y * yStep;
+                    context.fillText(2*y.toString(), centerX + 10, yPos + 5);
+                }
+            }
+
+            // Label x-axis and y-axis
+            context.fillText('x-axis', 700 - 30, centerY - 10);
+            context.fillText('y-axis', centerX + 10, 20);
+        }
+        // Function to plot a graph of any function (fx)
+        function plotGraph(canvas, gridSize, color, fx, range, dotted, zoom, graphType) {
+            //const context = canvas.getContext('2d');
+            context.beginPath();
+            context.strokeStyle = color;
+
+            const centerX = 700 / 2;
+            const centerY = 700 / 2;
+
+            const xStep = 0.5;
+            const yStep = 0.5;
+            const xValues = [];
+            const yValues = [];
+drawAxes();
+            for (let x = -centerX; x <= centerX; x += xStep) {
+                const scaledX = x * xStep;
+                const y = eval(fx);
+                if (y >= -range && y <= range) {
+                    const scaledY = y * yStep;
+                    xValues.push(scaledX);
+                    yValues.push(scaledY);
+                }
+            }
+
+            if (graphType === 'dots') {
+                for (let i = 0; i < xValues.length; i++) {
+                    const x = centerX + xValues[i] * gridSize;
+                    const y = centerY - yValues[i] * gridSize;
+                    context.fillRect(x, y, 3, 3);
+					//context.arc(x, y, 2, 0, 2 * Math.PI);
+                }
+            } else if (graphType === 'lines') {
+                for (let i = 0; i < xValues.length; i++) {
+                    const x = centerX + xValues[i] * gridSize;
+                    const y = centerY - yValues[i] * gridSize;
+                    if (i === 0) {
+                        context.moveTo(x, y);
+                    } else {
+                        context.lineTo(x, y);
+                    }
+                }
+            } else if (graphType === 'dottedLines') {
+                for (let i = 0; i < xValues.length; i++) {
+                    if (i % 2 === 0) {
+                        const x = centerX + xValues[i] * gridSize;
+                        const y = centerY - yValues[i] * gridSize;
+                        if (i === 0) {
+                            context.moveTo(x, y);
+                        } else {
+                            context.lineTo(x, y);
+                        }
+                    }
+                }
+            }
+
+            context.stroke();
+        }
+
+        // Function to display coordinates at mouse position
+        function displayCoordinates(event) {
+            //const canvas = document.getElementById('graphCanvas');
+            //const context = canvas.getContext('2d');
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const x = ((mouseX - centerX) / 1).toFixed();
+            const y = ((centerY - mouseY) / 1).toFixed();
+
+            context.clearRect(canvas.width - 100, 0, 100, 20);
+            context.fillText(`(${x}, ${y})`, canvas.width - 100, 15);
+        }
+          // Function to reset the canvas to its initial state
+        function resetCanvas() {
+            const canvas = document.getElementById('graphCanvas');
+            const gridSizeInput = document.getElementById('gridSize');
+            const axisRangeInput = document.getElementById('axisRange');
+            const functionInput = document.getElementById('functionInput');
+            const zoomInput = document.getElementById('zoom');
+            const graphTypeSelect = document.getElementById('graphType');
+            const dottedLineInput = document.getElementById('dottedLine');
+
+            const gridSize = parseInt(gridSizeInput.value);
+            const axisRange = parseInt(axisRangeInput.value);
+            const fx = functionInput.innerText;
+            const zoom = parseFloat(zoomInput.value);
+            const graphType = graphTypeSelect.value;
+            const dottedLine = dottedLineInput.checked;
+            const gridColor = '#ccc';
+            const graphColor = 'blue';
+
+            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+            drawGraphPaper(canvas, gridSize, gridColor);
+            drawAxes(canvas, gridSize, gridColor, axisRange);
+            plotGraph(canvas, gridSize, graphColor, fx, axisRange, dottedLine, zoom, graphType);
+        }
+
+        // Function to plot the graph when the "Plot" button is clicked
+        function plotGraphOnButtonClick() {
+            resetCanvas();
+        }
+        // Function to plot the graph when the "Plot" button is clicked
+        function plotGraphOnButtonClick() {
+            //const canvas = document.getElementById('graphCanvas');
+            const gridSizeInput = document.getElementById('gridSize');
+            const axisRangeInput = document.getElementById('axisRange');
+            const functionInput = document.getElementById('functionInput');
+            const zoomInput = document.getElementById('zoom');
+            const graphTypeSelect = document.getElementById('graphType');
+            const dottedLineInput = document.getElementById('dottedLine');
+
+            const gridSize = parseInt(gridSizeInput.value);
+            const axisRange = parseInt(axisRangeInput.value);
+            const fx = functionInput.innerText;
+            const zoom = parseFloat(zoomInput.value);
+            const graphType = graphTypeSelect.value;
+            const dottedLine = dottedLineInput.checked;
+            const gridColor = '#ccc';
+            const graphColor = 'blue';
+
+            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+            drawGraphPaper(canvas, gridSize, gridColor);
+            drawAxes(canvas, gridSize, gridColor, axisRange);
+            plotGraph(canvas, gridSize, graphColor, fx, axisRange, dottedLine, zoom, graphType);
+        }
+
+ // Call the functions when the page loads
+        window.onload = function () {
+            //const canvas = document.getElementById('graphCanvas');
+            const gridSizeInput = document.getElementById('gridSize');
+            const axisRangeInput = document.getElementById('axisRange');
+            const functionInput = document.getElementById('functionInput');
+            const zoomInput = document.getElementById('zoom');
+            const graphTypeSelect = document.getElementById('graphType');
+            const dottedLineInput = document.getElementById('dottedLine');
+
+            drawGraphPaper(canvas, gridSizeInput.value, '#ccc');
+            drawAxes(canvas, gridSizeInput.value, '#ccc', axisRangeInput.value);
+
+            // Add onclick event listener to the "Plot" button
+            const plotButton = document.querySelector('button');
+            plotButton.addEventListener('click', plotGraphOnButtonClick);
+
+            // Add onclick event listener to the canvas
+            canvas.addEventListener('click', displayCoordinates);
+
+            // Add event listeners to the inputs for changes
+            gridSizeInput.addEventListener('input', resetCanvas);
+            axisRangeInput.addEventListener('input', resetCanvas);
+            functionInput.addEventListener('input', resetCanvas);
+            zoomInput.addEventListener('input', resetCanvas);
+            graphTypeSelect.addEventListener('change', resetCanvas);
+            dottedLineInput.addEventListener('change', resetCanvas);
+        };
+		resetCanvas()
+    </script>
+    <!-- Add Bootstrap JS -->
+    <script src="js/jquery.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+</body>
+</html>

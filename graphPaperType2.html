@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <div>
+	<h2 class="text-info text-centre">Multipurpose Graph Paper</h2>
+        X Range: <input type="number" id="xRangeInput" min="10" max="800" step="10" value="800">
+        Y Range: <input type="number" id="yRangeInput" min="10" max="800" step="10" value="800">
+        Cell Size: <input type="number" id="cellSizeInput" min="0" max="50" step="2" value="5"><span id="cellSizeValue"></span>
+        <button onclick="updateGrid()">Update Graph Axes</button><button id="saveButton">Save</button>
+		<button id="clearButton">Clear Canvas</button>
+		<hr>
+    </div>
+    <canvas id="graphCanvas" width="800" height="800"></canvas>
+
+    <script>
+        const canvas = document.getElementById("graphCanvas");
+        const context = canvas.getContext("2d");
+
+        const xRangeInput = document.getElementById("xRangeInput");
+        const yRangeInput = document.getElementById("yRangeInput");
+        const cellSizeInput = document.getElementById("cellSizeInput");
+        const cellSizeValue = document.getElementById("cellSizeValue");
+		const xRange=1000;
+		const yRange=1000;
+        function drawGrid(xRange, yRange, cellSize) {
+            canvas.width = xRange;
+            canvas.height = yRange;
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            context.strokeStyle = "lightgray";
+
+            for (let x = 0; x < xRange; x += cellSize) {
+                context.beginPath();
+                context.moveTo(x, 0);
+                context.lineTo(x, yRange);
+                context.stroke();
+            }
+
+            for (let y = 0; y < yRange; y += cellSize) {
+                context.beginPath();
+                context.moveTo(0, y);
+                context.lineTo(xRange, y);
+                context.stroke();
+            }
+
+            // Add x-axis and y-axis
+            context.strokeStyle = "darkred";
+
+            // Draw x-axis (horizontal line)
+            context.beginPath();
+            context.moveTo(0, yRange / 2);
+            context.lineTo(xRange, yRange / 2);
+            context.stroke();
+
+            // Draw y-axis (vertical line)
+            context.beginPath();
+            context.moveTo(xRange / 2, 0);
+            context.lineTo(xRange / 2, yRange);
+            context.stroke();
+
+            // Add axis values (labels)
+            context.fillStyle = "darkgreen";
+            context.font = "12px Arial";
+            
+            // Calculate the number of divisions
+            const xDivisions = xRange / cellSize;
+            const yDivisions = yRange / cellSize;
+
+            // Draw x-axis labels
+            for (let i = -xDivisions / 2; i <= xDivisions / 2; i++) {
+                context.fillText(i * 1, (xRange / 2) + i * cellSize - 5, (yRange / 2) + 15);
+            }
+
+            // Draw y-axis labels
+            for (let j = -yDivisions / 2; j <= yDivisions / 2; j++) {
+                context.fillText(j * 1, (xRange / 2) - 20, (yRange / 2) - j * cellSize + 5);
+            }
+        }
+
+        function updateGrid() {
+            const xRange = parseInt(xRangeInput.value).toFixed(0);
+            const yRange = parseInt(yRangeInput.value).toFixed(0);
+            const cellSize = parseInt(cellSizeInput.value).toFixed(0);
+
+            drawGrid(xRange, yRange, cellSize*10);
+        }
+
+        // Initial grid creation with default values
+        updateGrid();
+		        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        let dotArray = [];
+
+        canvas.addEventListener('mousedown', (event) => {
+            isDrawing = true;
+            const x = event.clientX - canvas.getBoundingClientRect().left;
+            const y = event.clientY - canvas.getBoundingClientRect().top;
+            lastX = x;
+            lastY = y;
+            drawDot(x, y);
+        });
+
+        canvas.addEventListener('mousemove', (event) => {
+            if (!isDrawing) return;
+            const x = event.clientX - canvas.getBoundingClientRect().left;
+            const y = event.clientY - canvas.getBoundingClientRect().top;
+            drawLine(lastX, lastY, x, y);
+            lastX = x;
+            lastY = y;
+            dotArray.push({ x, y });
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
+
+        function drawDot(x, y) {
+            context.fillStyle = 'red';
+            context.beginPath();
+            context.arc(x, y, 5, 0, 2 * Math.PI);
+            context.fill();
+            dotArray.push({ x, y });
+        }
+
+        function drawLine(x1, y1, x2, y2) {
+            context.strokeStyle = 'blue';
+            context.lineWidth = 2;
+            context.beginPath();
+            context.moveTo(x1, y1);
+            context.lineTo(x2, y2);
+            context.stroke();
+        }
+
+        // Function to save the canvas as an image
+        function saveCanvasAsImage() {
+            const dataURL = canvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = dataURL;
+            a.download = 'canvas_image.png';
+            a.click();
+        }
+
+        // Function to clear the canvas
+        function clearCanvas() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            dotArray = [];
+        }
+
+        const saveButton = document.getElementById('saveButton');
+        saveButton.addEventListener('click', saveCanvasAsImage);
+
+        const clearButton = document.getElementById('clearButton');
+        clearButton.addEventListener('click', clearCanvas);
+        clearButton.addEventListener('click', updateGrid);
+    </script>
+</body>
+</html>

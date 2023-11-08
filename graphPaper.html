@@ -1,0 +1,272 @@
+<style>
+/* ... (CSS code remains unchanged) ... */
+
+#eraserButton {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background-color: #ff0000;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#eraserButton.active {
+  background-color: #990000;
+}
+</style>
+  <!-- Include Bootstrap CSS -->
+<link href="css/bootstrap.min.css" rel="stylesheet">
+<div class="row">
+<div class="col-sm-4">
+<div>
+  <label for="xPosition">X-Axis Position: </label>
+  <input type="range" id="xPosition" min="-300" max="300" step="10" value="0">
+</div>
+
+<div>
+  <label for="yPosition">Y-Axis Position: </label>
+  <input type="range" id="yPosition" min="-200" max="200" step="10" value="0">
+</div>
+
+<div>
+  <label for="gridSize">Grid Size: </label>
+  <input type="range" id="gridSize" min="10" max="50" step="10" value="20">
+</div>
+
+<div>
+  <label for="xAxisColor">X-Axis Color: </label>
+  <input type="color" id="xAxisColor" value="#000000">
+</div>
+
+<div>
+  <label for="yAxisColor">Y-Axis Color: </label>
+  <input type="color" id="yAxisColor" value="#FF0000">
+</div>
+
+<div>
+  <label for="canvasColor">Canvas Background Color: </label>
+  <input type="color" id="canvasColor" value="#FFFFFF">
+</div>
+
+<div>
+  <label for="canvasWidth">Canvas Width: </label>
+  <input type="number" id="canvasWidth" value="600">
+</div>
+
+<div>
+  <label for="canvasHeight">Canvas Height: </label>
+  <input type="number" id="canvasHeight" value="400">
+</div>
+  <div>
+    <button id="eraserButton">Eraser</button>
+  </div>
+  <div>
+    <label for="eraserSize">Eraser</label>
+    <input type="range" id="eraserSize" min="5" max="30" value="15">
+    <span id="eraserSizeValue">15</span>
+  </div>
+</div>
+<div class="col-sm-8">
+<canvas id="myCanvas" width="800" height="400"></canvas>
+</div>
+</div>
+<script>
+const canvas = document.getElementById("myCanvas");
+const ctx = canvas.getContext("2d");
+function drawGrid() {
+  // Update canvas size
+  canvas.width = document.getElementById("canvasWidth").value;
+  canvas.height = document.getElementById("canvasHeight").value;
+
+  // Clear the canvas with the selected background color
+  ctx.fillStyle = document.getElementById("canvasColor").value;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Get the x-axis position from the slider
+  const xPosition = parseInt(document.getElementById("xPosition").value);
+
+  // Get the y-axis position from the slider
+  const yPosition = parseInt(document.getElementById("yPosition").value);
+
+  // Get the grid size from the slider
+  const gridSize = parseInt(document.getElementById("gridSize").value);
+
+  // Get the x-axis color from the color picker
+  const xAxisColor = document.getElementById("xAxisColor").value;
+
+  // Get the y-axis color from the color picker
+  const yAxisColor = document.getElementById("yAxisColor").value;
+
+  ctx.lineWidth = 1;
+
+  // Draw vertical grid lines
+  for (let x = (xPosition % gridSize) + gridSize; x <= canvas.width; x += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.strokeStyle = "#ccc"; // Grid lines color
+    ctx.stroke();
+  }
+
+  // Draw horizontal grid lines
+  for (let y = (yPosition % gridSize) + gridSize; y <= canvas.height; y += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.strokeStyle = "#ccc"; // Grid lines color
+    ctx.stroke();
+  }
+
+  // Draw x-axis
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height / 2 + yPosition);
+  ctx.lineTo(canvas.width, canvas.height / 2 + yPosition);
+  ctx.strokeStyle = xAxisColor; // X-axis color
+  ctx.stroke();
+
+  // Draw y-axis
+  ctx.beginPath();
+  ctx.moveTo(canvas.width / 2 + xPosition, 0);
+  ctx.lineTo(canvas.width / 2 + xPosition, canvas.height);
+  ctx.strokeStyle = yAxisColor; // Y-axis color
+  ctx.stroke();
+
+  // Label x-axis
+  ctx.fillStyle = xAxisColor;
+  for (let x = (xPosition % gridSize) + gridSize; x <= canvas.width; x += gridSize) {
+    ctx.fillText(((x - canvas.width / 2 - xPosition) / gridSize).toFixed(0), x - 5, canvas.height / 2 + yPosition + 15);
+  }
+
+  // Label y-axis
+  ctx.fillStyle = yAxisColor;
+  for (let y = (yPosition % gridSize) + gridSize; y <= canvas.height; y += gridSize) {
+    ctx.fillText((-(y - canvas.height / 2 - yPosition) / gridSize).toFixed(0), canvas.width / 2 + xPosition + 5, y - 5);
+  }
+}
+
+// Add event listeners to the input elements
+document.getElementById("xPosition").addEventListener("input", drawGrid);
+document.getElementById("yPosition").addEventListener("input", drawGrid);
+document.getElementById("gridSize").addEventListener("input", drawGrid);
+document.getElementById("xAxisColor").addEventListener("input", drawGrid);
+document.getElementById("yAxisColor").addEventListener("input", drawGrid);
+document.getElementById("canvasColor").addEventListener("input", drawGrid);
+document.getElementById("canvasWidth").addEventListener("input", drawGrid);
+document.getElementById("canvasHeight").addEventListener("input", drawGrid);
+// Function to check if two circles collide
+function checkCollisions() {
+  for (let i = circles.length - 1; i >= 0; i--) {
+    for (let j = i - 1; j >= 0; j--) {
+      const circle1 = circles[i];
+      const circle2 = circles[j];
+      const distance = Math.sqrt((circle1.x - circle2.x) ** 2 + (circle1.y - circle2.y) ** 2);
+      if (distance <= 2 * circle1.radius) {
+        circles.splice(i, 1);
+        circles.splice(j, 1);
+        drawGrid();
+        break;
+      }
+    }
+  }
+}
+// Add click event listener to the canvas
+canvas.addEventListener("click", function (event) {
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = event.clientX - rect.left;
+  const mouseY = event.clientY - rect.top;
+  drawCircle(mouseX, mouseY);
+});
+
+function drawCircle(x, y) {
+  const radius = 2;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, 2 * Math.PI);
+  ctx.fillStyle = "blue";
+  ctx.fill();
+}
+
+
+//------------------------//
+
+let eraserMode = false; // Flag to track eraser mode
+const circles = []; // Array to store drawn circles
+let eraserSize = 15; // Initial eraser size
+// Event listener to track changes in the eraser size slider
+    const eraserSizeSlider = document.getElementById("eraserSize");
+    eraserSizeSlider.addEventListener("input", function () {
+      eraserSize = parseInt(eraserSizeSlider.value);
+      document.getElementById("eraserSizeValue").textContent = eraserSize;
+      drawGrid();
+    });
+  // Add click event listener to the canvas
+  canvas.addEventListener("click", function (event) {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    if (eraserMode) {
+      removeCircle(mouseX, mouseY);
+    } else {
+      drawCircle(mouseX, mouseY);
+      checkCollisions(); // Check for collisions after drawing a new circle
+    }
+  });
+
+  // Function to remove circle at the specified position
+  function removeCircle(x, y) {
+    for (let i = circles.length - 1; i >= 0; i--) {
+      const circle = circles[i];
+      const distance = Math.sqrt((x - circle.x) ** 2 + (y - circle.y) ** 2);
+      if (distance <= 5) {
+        circles.splice(i, 1);
+        drawGrid();
+        break;
+      }
+    }
+  }
+
+  // Add event listener to the eraser button
+  const eraserButton = document.getElementById("eraserButton");
+  eraserButton.addEventListener("click", function () {
+    eraserMode = !eraserMode;
+    eraserButton.classList.toggle("active", eraserMode);
+  });
+
+  // Initial draw of the grid
+  drawGrid();
+// Initialize variables to store the previous point
+let prevX;
+let prevY;
+
+function drawCircle(x, y) {
+  if (!eraserMode) {
+    if (prevX !== undefined && prevY !== undefined) {
+      // Draw a line from the previous point to the current point
+      ctx.beginPath();
+      ctx.moveTo(prevX, prevY);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = "blue"; // Line color
+      ctx.lineWidth = 2; // Line width
+      ctx.stroke();
+    }
+  }
+
+  const radius = eraserMode ? eraserSize : 2;
+
+  // Draw a circle at the current point
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, 2 * Math.PI);
+  ctx.fillStyle = eraserMode ? document.getElementById("canvasColor").value : "blue";
+  ctx.fill();
+
+  prevX = x; // Update the previous X coordinate
+  prevY = y; // Update the previous Y coordinate
+}
+
+
+</script>
+    <!-- Add Bootstrap JS -->
+    <script src="js/jquery.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>

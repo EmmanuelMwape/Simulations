@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Interactive Freefall Simulation</title>
+	    <style>
+        table {
+            border-collapse: collapse;
+            width: 40%;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <button id="startButton">Start Simulation</button>
+    <label for="gravityInput">Gravity: </label>
+    <input type="range" id="gravityInput" min="1" max="10" step="1" value="1">
+    <table id="dataTable">
+        <tr>
+            <th>Time</th>
+            <th>Height</th>
+            <th>Potential Energy</th>
+            <th>Kinetic Energy</th>
+        </tr>
+    </table>
+    
+    <script>
+	const dataTable = document.getElementById('dataTable');
+	function clearTable() {
+    // Loop through all rows and remove them except the header row (index 0)
+    for (let i = dataTable.rows.length - 1; i > 0; i--) {
+        dataTable.deleteRow(i);
+		}
+	}
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const startButton = document.getElementById('startButton');
+        const gravityInput = document.getElementById('gravityInput');
+        const table = document.querySelector('table');
+
+        let ballDragging = false;
+        let ballX = canvas.width / 4;
+        let ballY = 90;
+        let yVelocity = 0;
+        let gravity = parseFloat(gravityInput.value);
+        const timeStep = 0.1;
+        let timeElapsed = 0;
+        let recordInterval;
+        let recording = false;
+
+        const ballRadius = 20;
+        const mass = 1; // Mass of the ball
+        const g = gravity; // Acceleration due to gravity
+
+        // Load the image
+        const image = new Image();
+        image.src = 'imgs/pisa.png'; // Replace with the actual path to your image
+
+        // Once the image is loaded, draw it on the canvas
+        image.onload = function() {
+            updatePosition();
+        };
+
+        canvas.addEventListener('mousedown', function(e) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            if (Math.sqrt((ballX - mouseX) ** 2 + (ballY - mouseY) ** 2) < ballRadius) {
+                ballDragging = true;
+                yVelocity = 0; // Reset yVelocity when dragging starts
+            }
+        });
+
+        canvas.addEventListener('mousemove', function(e) {
+            if (ballDragging) {
+                const rect = canvas.getBoundingClientRect();
+                ballX = e.clientX - rect.left;
+                ballY = e.clientY - rect.top;
+            }
+        });
+
+        canvas.addEventListener('mouseup', function() {
+            ballDragging = false;
+        });
+
+        startButton.addEventListener('click', function() {
+            yVelocity = 0;
+            gravity = parseFloat(gravityInput.value);
+			ballX = canvas.width / 4;
+			ballY = 90;
+			timeElapsed=0;
+			clearTable();
+			
+        });
+
+        function updatePosition() {
+            if (!recording) {
+                recording = true;
+                recordInterval = setInterval(recordData, 500); // Record data every 500 milliseconds
+            }
+
+            if (!ballDragging) {
+                yVelocity += gravity * timeStep;
+                ballY += yVelocity * timeStep;
+
+                if (ballY + ballRadius > canvas.height) {
+                    ballY = canvas.height - ballRadius;
+                    yVelocity = 0;
+                    clearInterval(recordInterval); // Stop recording when the ball hits the ground
+                }
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw the image
+            ctx.drawImage(image, 100, 100);
+
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+            ctx.fillStyle = 'brown';
+            ctx.fill();
+            ctx.closePath();
+
+            requestAnimationFrame(updatePosition);
+        }
+
+        function recordData() {
+            const potentialEnergy = mass * g * (canvas.height - ballY);
+            const kineticEnergy = 0.5 * mass * yVelocity ** 2;
+
+            const newRow = table.insertRow(-1);
+            newRow.insertCell(0).textContent = timeElapsed.toFixed(2);
+            newRow.insertCell(1).textContent = (canvas.height - ballY).toFixed(2);
+            newRow.insertCell(2).textContent = potentialEnergy.toFixed(2);
+            newRow.insertCell(3).textContent = kineticEnergy.toFixed(2);
+
+            timeElapsed += 0.5; // Record every 500 milliseconds
+        }
+    </script>
+</body>
+</html>

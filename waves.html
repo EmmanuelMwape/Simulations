@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Transverse Waves with Oscillating Particle</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+<style>
+canvas {
+    border: 1px solid #ccc;
+    background-color: #fff;
+}
+.rotatable-image {
+  width: 100%;
+  height: 100%;
+}
+
+</style>
+</head>
+<body>
+<div class="container">
+<div class="jumbotron jumbotron-fluid bg-light text-dark text-center py-2">
+<h1 class="display-4">Wave Motion</h1>
+<p class="lead">Experiment on Properties of Transverse Waves</p>
+<div class="row">
+
+<div class="col-sm-8 text-center">
+  <canvas id="sineWaveCanvas" width="600" height="400" style="border: 1px solid black;"></canvas>
+</div>
+<div class="col-sm-4">  <div>
+    <label for="amplitude">Amplitude:</label>
+    <input type="range" id="amplitude" min="10" max="150" value="50">
+
+    <label for="frequency">Frequency:</label>
+    <input type="range" id="frequency" min="0" max="10" value="1">
+
+    <label for="wavelength">Wavelength:</label>
+    <input type="range" id="wavelength" min="100" max="400" value="200">
+
+    <label for="waveColor">Wave Color:</label>
+    <input type="color" id="waveColor" value="#0000ff">
+
+    <label for="ballColor">Ball Color:</label>
+    <input type="color" id="ballColor" value="#ff0000">
+  </div>
+  </div>
+</div>
+</div>
+</div>
+
+
+  <script>
+      // Add event listeners to update parameters on user input
+    document.getElementById('amplitude').addEventListener('input', function() {
+      amplitude = this.value;
+    });
+
+    document.getElementById('frequency').addEventListener('input', function() {
+      frequency = this.value*0.01;
+      particleSpeed = frequency * 0.1;
+    });
+
+    document.getElementById('wavelength').addEventListener('input', function() {
+      wavelength = this.value;
+      frequency = 2 * Math.PI / wavelength;
+      particleSpeed = frequency * 0.1;
+    });
+
+    document.getElementById('waveColor').addEventListener('input', function() {
+      waveColor = this.value;
+    });
+
+    document.getElementById('ballColor').addEventListener('input', function() {
+      ballColor = this.value;
+    });
+    const canvas = document.getElementById('sineWaveCanvas');
+    const ctx = canvas.getContext('2d');
+
+    var amplitude = 50; // Set the amplitude of the sine wave
+    var wavelength = 100; // Set the wavelength of the sine wave
+    var frequency = 2 * Math.PI / wavelength; // Calculate the frequency based on the wavelength
+    var phaseShift = 0; // Set the phase shift of the sine wave
+    const yOffset = canvas.height / 2; // Set the vertical offset to center the wave
+
+    var particleRadius = 8; // Set the particle radius
+    const particleSpeed = frequency * 0.01; // Set the speed of the particle oscillation relative to the wave
+
+    let particleX = canvas.width / 2; // Initialize particle's X position
+    let particleY = 0; // Initialize particle's Y position
+
+    let time = 0; // Initialize time for animation
+    let wavePosition = 0; // Initialize wave position for left to right movement
+
+    function drawSineWave() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw grid and label amplitude and wavelength
+      ctx.strokeStyle = '#ccc';
+      ctx.fillStyle = 'black';
+      for (let x = 0; x < canvas.width; x += 20) {
+        for (let y = 0; y < canvas.height; y += 20) {
+          ctx.strokeRect(x, y, 20, 20);
+        }
+      }
+
+      // Label x-axis (wavelength)
+      ctx.fillText("Wavelength", canvas.width - 70, yOffset + 20);
+      for (let i = 0; i <= 100; i += 20) {
+        const x = (i / 100) * canvas.width;
+        ctx.fillText(i.toString(), x - 5, yOffset + 40);
+      }
+
+      // Label y-axis (amplitude)
+      ctx.fillText("Amplitude", 10, 20);
+      for (let i = -80; i <= 80; i += 10) {
+        const y = yOffset - (i / 100) * (canvas.height / 2);
+        ctx.fillText(i.toString(), 30, y + 5);
+      }
+
+      ctx.beginPath();
+
+      for (let x = 0; x < canvas.width; x++) {
+        const y = amplitude * Math.sin(frequency * (x + wavePosition) + phaseShift) + yOffset;
+        ctx.lineTo(x, y);
+      }
+
+      ctx.strokeStyle = waveColor;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Place the oscillating particle on the wave
+      particleY = amplitude * Math.sin(frequency * (particleX + wavePosition) + phaseShift) + yOffset;
+
+      ctx.fillStyle = ballColor;
+      ctx.beginPath();
+      ctx.arc(particleX, particleY, particleRadius, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Update particle position for oscillation
+      particleX += particleSpeed;
+
+      time += 0.02; // Update time for animation
+      wavePosition += 1; // Move wave position from left to right
+
+      requestAnimationFrame(drawSineWave);
+    }
+
+    drawSineWave();
+  </script>
+</body>
+</html>

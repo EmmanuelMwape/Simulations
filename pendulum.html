@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple Pendulum Simulator</title>
+  <!-- Add Bootstrap CSS link -->
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="row">
+<div class="col-4">
+  <div class="container mt-4">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="mb-0">Simple Pendulum Simulator</h4>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label for="length">Length <span id="ltext"></span>(m)</label>
+          <input type="range" class="form-control" id="length" value="150" min="10" max="300" step="10">
+        </div>
+        <div hidden class="form-group">
+          <label for="angle">Initial Angle (degrees)</label>
+          <input type="range" class="form-control" id="angle" value="45" min="5" max="180">
+        </div>
+        <div class="form-group">
+          <label for="gravity">Gravity <span id="gtext"></span> (m/s²)</label>
+          <input type="range" class="form-control" id="gravity" value="10" min="1" max="100" step="2">
+        </div>
+        <div class="form-group">
+          <label for="mass">Mass <span id="mtext"></span>(kg)</label>
+          <input type="range" class="form-control" id="mass" value="10" min="1" max="100" step="5">
+        </div>
+        <div class="mt-3">
+          <button class="btn btn-primary" onclick="start()" id="startBtn">Start Simulation</button>
+          <button class="btn btn-danger"onclick="stop()" id="stopBtn">Stop Simulation</button>
+        </div>
+        <div class="mt-3">
+          <h5>Pendulum Info</h5>
+          <p>Angle: <span id="angleValue"></span> degrees</p>
+          <p>Velocity: <span id="velocityValue"></span> rad/s</p>
+          <p>Kinetic Energy: <span id="keValue"></span> J</p>
+          <p>Potential Energy: <span id="peValue"></span> J</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="col-8">
+  <svg width="800" height="800" 
+    <defs>
+    <filter id="filter1289" x="-0.85683" y="-0.85683" width="4" height="4" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="13.512417" />
+    </filter>
+  </defs>
+  <!-- background  -->
+  <rect width="100%" height="100%" fill="#eee" />
+    <!-- Pendulum rod -->
+    <line id="rod" x1="400" y1="50" x2="400" y2="200" stroke="black" stroke-width="2" />
+	<circle id="circle2"cx="298" cy="202" r="15" style="fill:#fff;stroke-width:0.264583;fill-opacity:1;filter:url(#filter1289)" />
+    <!-- Pendulum bob -->
+    <circle id="bob" cx="400" cy="200" r="20" fill="black" />
+  </svg>
+  <canvas id="gridCanvas" width="400" height="200"></canvas>
+</div>
+</div>
+<!-- JavaScript code to get values on change -->
+<script>
+//angulard displacement
+    const angleValue = document.getElementById('angleValue');
+    const velocityValue = document.getElementById('velocityValue');
+    const keValue = document.getElementById('keValue');
+    const peValue = document.getElementById('peValue');
+  const lengthInput = document.getElementById('length');
+  const angleInput = document.getElementById('angle');
+  const gravityInput = document.getElementById('gravity');
+  const massInput = document.getElementById('mass');
+   const ltext = document.getElementById('ltext');
+   const gtext = document.getElementById('gtext');
+   const mtext = document.getElementById('mtext');
+   const rod = document.getElementById('rod');
+    const bob = document.getElementById('bob');
+    const boblight = document.getElementById('circle2');
+    var length = 1; // Length of the pendulum (in pixels)
+	ltext.innerText=length
+	var velocity = 0;
+    var kineticEnergy = 0;
+    var potentialEnergy = 0;
+	var angularAcceleration;
+	var t=0;
+	var tt=0;
+	var k=0;
+	var value;
+    var gravity = 3.81; // Acceleration due to gravity (in m/s^2)
+	gtext.innerText=gravity;
+    let angle = Math.PI / 10; // Initial angle (45 degrees) in radians
+	mtext.innerText=20;
+    let angularVelocity = 0; // Initial angular velocity (in rad/s)
+    var timeStep = 0.05; // Time step for simulation (in seconds)
+	var intervalId;
+  // Add event listeners to each input element
+  lengthInput.addEventListener('input', handleInputChange);
+  angleInput.addEventListener('input', handleInputChange);
+  gravityInput.addEventListener('input', handleInputChange);
+  massInput.addEventListener('input', handleInputChange);
+  
+        // Get the canvas element
+        const canvas = document.getElementById('gridCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Define the size of each cell in the grid
+        const cellSize = 50;
+
+        // Define the number of rows and columns in the grid
+        const rows = 2;
+        const columns = 12;
+
+        // Loop through rows and columns to draw the grid and add text
+        for (let i = 0; i < rows; i++) {
+            for (let j = 0; j < columns; j++) {
+                // Calculate the position of each cell
+                const x = j * cellSize;
+                const y = i * cellSize;
+
+                // Draw a rectangle for each cell
+                
+                ctx.strokeRect(x, y, cellSize, cellSize);
+
+                // Add text in each cell
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+            }
+			ctx.fillText('Time', 25, 25);
+			ctx.fillText('Freq', 25, 70);
+        }
+   
+  // Function to handle input change event
+  function handleInputChange(event) {
+    // Get the current value of the input element
+     value = event.target.value;
+
+    // Get the id of the input element to identify which value is being changed
+    const inputId = event.target.id;
+     if(inputId=="length"){length=value;ltext.innerText=value};
+     if(inputId=="gravity"){gravity=value;gtext.innerText=value};
+	 if(inputId=="mass"){mass=value;mtext.innerText=value};
+     clearInterval(intervalId);
+    // Update the corresponding value in your simulation or perform any other action with the value
+    console.log(`Input "${inputId}" changed to: ${value}`);
+	intervalId =setInterval(updatePendulum, 0.1*length);
+  }
+  function start(){handleInputChange(event)}
+  function stop(){clearInterval(intervalId);}
+</script>
+  <script>
+  function updatePendulum() {
+      // Calculate the angular acceleration (α) using the formula: α = - (g / l) * sin(θ)
+      angularAcceleration = -(gravity / length) * Math.sin(angle);
+
+      // Update the angular velocity and angle using the Euler method
+	  //timeStep=timeStep*0.9*length;
+      angularVelocity += angularAcceleration * timeStep;
+      angle += angularVelocity * timeStep;
+
+      // Calculate the position of the pendulum bob based on the angle and length
+      const x2 = 400 + length * Math.sin(angle);
+      const y2 = 400 + length * Math.cos(angle);
+		//console.log(angle);
+      // Update the position of the pendulum bob and rod in the SVG element
+      bob.setAttribute('cx', x2.toString());
+      boblight.setAttribute('cx', x2.toString());
+      bob.setAttribute('cy', y2.toString());
+      boblight.setAttribute('cy', y2.toString());
+      rod.setAttribute('x2', x2.toString());
+      rod.setAttribute('y2', y2.toString());
+	  variblesPendulum();
+    }
+
+    // Call the updatePendulum function at regular intervals for animation
+    //setInterval(updatePendulum, 0.1*length); // Convert time step to milliseconds
+  </script>
+  <script>
+   // Function to update the pendulum values
+    function variblesPendulum() {
+      // Calculate angular acceleration (α) using the formula: α = - (g / l) * sin(θ)
+ 
+      // Update velocity and angle using the Euler method
+      velocity += angularAcceleration * 0.1;
+      angle += velocity * 0.1;
+			
+      // Calculate kinetic energy using the formula: KE = 0.5 * m * v^2
+      kineticEnergy = 0.5 * mass * velocity * velocity;
+
+      // Calculate potential energy using the formula: PE = m * g * h
+      potentialEnergy = mass * gravity * length * (1 - Math.cos(angle));
+
+      // Update the pendulum info on the card
+      angleValue.textContent = (angle * 180 / Math.PI).toFixed(2);
+      velocityValue.textContent = velocity.toFixed(2);
+      keValue.textContent = kineticEnergy.toFixed(2);
+      peValue.textContent = potentialEnergy.toFixed(2);
+	  //console.log(tt);
+	  tt++;
+	  if(tt%1000==0){t++;ctx.fillText(potentialEnergy.toFixed(2), 25+50*t, 25);ctx.fillText(kineticEnergy.toFixed(2), 25+50*t, 70);}
+	  }
+  </script>
+
+</body>
+</html>

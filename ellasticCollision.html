@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conservation of Momentum</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <div style="display: flex;">
+        <div style="margin-right: 20px;">
+            <h2>Adjust Parameters:</h2>
+            <label for="mass1">Mass of Ball A (m1):</label>
+            <input onkeyup="mass1()"type="number" id="mass1" value="1">
+            <br>
+            <label for="mass2">Mass of Ball B (m2):</label>
+            <input onkeyup="mass2()"type="number" id="mass2" value="1">
+            <br>
+            <label for="velocity1">Initial Velocity of Ball A (u1):</label>
+            <input type="number" id="velocity1" value="2">
+            <br>
+            <label for="velocity2">Initial Velocity of Ball B (u2):</label>
+            <input type="number" id="velocity2" value="0">
+			<br>
+            <label for="velocity1">Final Velocity of Ball A (v1):</label>
+            <input type="number" id="velocity3" >
+            <br>
+            <label for="velocity2">Final Velocity of Ball B (v2):</label>
+            <input type="number" id="velocity4" >
+        </div>
+        <div>
+            <button id="startButton">Start Animation</button>
+            <button id="stopButton">Stop Animation</button>
+        </div>
+	<img style="width:400px;height:70px"src="mf.png">
+    </div>
+    <canvas id="collisionCanvas" width="1100" height="300"></canvas>
+    <script>
+// Get the canvas element and its context
+const canvas = document.getElementById('collisionCanvas');
+const ctx = canvas.getContext('2d');
+
+
+
+
+// Get the input elements and buttons
+const mass1Input = document.getElementById('mass1');
+const mass2Input = document.getElementById('mass2');
+const velocity1Input = document.getElementById('velocity1');
+const velocity2Input = document.getElementById('velocity2');
+const velocity3Input = document.getElementById('velocity3');
+const velocity4Input = document.getElementById('velocity4');
+const startButton = document.getElementById('startButton');
+const stopButton = document.getElementById('stopButton');
+
+// Animation variables
+let animationId;
+let animationRunning = false;
+
+// Constants
+let m1 = parseFloat(mass1Input.value); // Mass of Ball A
+let m2 = parseFloat(mass2Input.value); // Mass of Ball B
+let v1 = parseFloat(velocity1Input.value); // Initial velocity of Ball A
+let v2 = parseFloat(velocity2Input.value); // Initial velocity of Ball B
+const d = 200; // Initial distance between balls
+function mass1(){
+    // Draw Ball A
+    ctx.beginPath();
+    ctx.arc(x1, canvas.height / 2, 20*m1, 0, Math.PI * 2);
+    ctx.fillStyle = 'blue';
+    ctx.fill();
+    ctx.closePath();
+}
+function mass2(){
+
+    // Draw Ball B
+    ctx.beginPath();
+    ctx.arc(x2, canvas.height / 2, 20*m2, 0, Math.PI * 2);
+    ctx.fillStyle = 'red';
+    ctx.fill();
+    ctx.closePath();
+}
+// Draw vertical grid lines
+function gridlines(){
+for (let i = 20; i < canvas.width; i += 20) {
+    ctx.beginPath();
+    ctx.moveTo(i, 0);
+    ctx.lineTo(i, canvas.height);
+    ctx.stroke();
+}
+
+// Draw horizontal grid lines
+for (let j = 20; j < canvas.height; j += 20) {
+    ctx.beginPath();
+    ctx.moveTo(0, j);
+    ctx.lineTo(canvas.width, j);
+    ctx.stroke();
+}
+}
+// Initial positions
+let x1 = 50; // Initial position of Ball A
+let x2 = canvas.width - 550; // Initial position of Ball B
+function animate() {
+    // Clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw Ball A
+    ctx.beginPath();
+    ctx.arc(x1, canvas.height / 2, 20*m1, 0, Math.PI * 2);
+    ctx.fillStyle = 'blue';
+    ctx.fill();
+    ctx.closePath();
+
+    // Draw Ball B
+    ctx.beginPath();
+    ctx.arc(x2, canvas.height / 2, 20*m2, 0, Math.PI * 2);
+    ctx.fillStyle = 'red';
+    ctx.fill();
+    ctx.closePath();
+	gridlines();
+
+    // Update positions
+    x1 += v1;
+    x2 += v2;
+    // Boundary checks to prevent balls from going outside the canvas
+    if (x1 - 20 * m1 < 0 || x2 - 20 * m2 < 0 || x1 + 20 * m1 > canvas.width || x2 + 20 * m2 > canvas.width) {
+        stopButton.click(); // Simulate a click on the "Stop Animation" button
+        return; // Stop the animation
+    }
+    // Check for collision and update velocities
+    if (x1 + 20*m1 >= x2 - 20*m2) { // Check if the balls collide
+        // Calculate new velocities using the equations for elastic collision
+        const v1_final = ((m1 - m2) * v1 + 2 * m2 * v2) / (m1 + m2);
+        const v2_final = ((m2 - m1) * v2 + 2 * m1 * v1) / (m1 + m2);
+
+        v1 = v1_final;
+        v2 = v2_final;
+		// Set values for the input fields
+velocity3Input.value = v1_final;
+velocity4Input.value = v2_final;
+    }
+    // Request animation frame
+    animationId = requestAnimationFrame(animate);
+}
+// Function to draw the grid balls
+function draw() {
+    // Clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw grid lines
+    ctx.strokeStyle = 'lightgray';
+
+    // Draw Ball A
+    ctx.beginPath();
+    ctx.arc(x1, canvas.height / 2, 20, 0, Math.PI * 2);
+    ctx.fillStyle = 'blue';
+    ctx.fill();
+    ctx.closePath();
+
+    // Draw Ball B
+    ctx.beginPath();
+    ctx.arc(x2, canvas.height / 2, 20, 0, Math.PI * 2);
+    ctx.fillStyle = 'red';
+    ctx.fill();
+    ctx.closePath();
+}
+
+// Initial drawing
+draw();
+gridlines();
+
+// Update parameters when input values change
+mass1Input.addEventListener('input', () => {
+    m1 = parseFloat(mass1Input.value);
+    draw();
+});
+
+mass2Input.addEventListener('input', () => {
+    m2 = parseFloat(mass2Input.value);
+    draw();
+});
+
+velocity1Input.addEventListener('input', () => {
+    v1 = parseFloat(velocity1Input.value);
+    draw();
+});
+
+velocity2Input.addEventListener('input', () => {
+    v2 = parseFloat(velocity2Input.value);
+    draw();
+});
+
+// Start the animation when the "Start Animation" button is clicked
+startButton.addEventListener('click', () => {
+    if (!animationRunning) {
+        animationRunning = true;
+        animate();
+    }
+});
+
+// Stop the animation when the "Stop Animation" button is clicked
+stopButton.addEventListener('click', () => {
+    if (animationRunning) {
+        animationRunning = false;
+        cancelAnimationFrame(animationId);
+    }
+});
+	
+	</script>
+</body>
+</html>
