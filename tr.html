@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Exploring Transformation</title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+<!-- jQuery (required for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<!-- Popper.js (required for Bootstrap's dropdowns and tooltips) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.3/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+	<style>
+	#myCanvas{
+	background-color:#eee;
+	}
+	.myCanvas{
+	background-color:#eee;
+	}
+      .text-center {
+        text-align: center;
+      }
+
+      .text-center h3 {
+        margin: 0 auto;
+        display: inline-block;
+      }
+	  #myCanvas {
+		display: block;
+		margin: 0 auto;
+		}
+		  .myMatrix {
+		display: block;
+		margin: 0 auto;
+		text-align: center;
+		}
+    </style>
+  </head>
+  <body>
+  <div class="text-center bg-light p-3"><h3 class="text-warning">Exploring Geometric Transformation</h3>
+
+ </div>
+ <div class="">
+ <div class="row g-0">
+ <div class="col-sm-7 g-0"><canvas id="myCanvas" width="700" height="700"></canvas></div>
+ <div class="col-sm-5 g-0 bg-light">
+ <div class="">
+     
+      <ul class="nav nav-tabs d-flex">
+        <li class="nav-item">
+          <a class="nav-link btn-info btn-sm flex-fill active" data-toggle="tab" href="#menu3">Transforms</a>
+        </li>
+      </ul>
+
+      <div class="tab-content">
+        <div id="menu3" class="tab-pane active">
+		<h4>Dilation</h4>
+		<p class="p-2 text-justify">In geometric transformation, dilation (also known as enlargement) is a transformation that changes the size of an object by stretching or shrinking it uniformly in all directions. The dilation factor determines the scale of the transformation.</p>
+		<div class="container">
+  <div class="row">
+    <div class="col">
+      <label class="text-danger font-weight-bold text-center">Transformation Matrix:</label>
+	  <div class="myMatrix"contentEditable="true">
+<table class="myMatrix">
+  <tr>
+    <td oninput="transform()" id="a"width="30"contentEditable="true"style="color:purple;background-color: #fef7fa;size:30px;font-weight:bold">3</td>
+    <td id="b"width="30"contentEditable="true"style="color:purple;background-color: #fef7fa;size:30px;font-weight:bold">0</td>
+  </tr>
+  <tr>
+    <td id="c"width="30"contentEditable="true"style="color:purple;background-color: #fef7fa;size:30px;font-weight:bold">0</td>
+    <td oninput="transform()"id="d"width="30"contentEditable="true"style="color:purple;background-color: #fef7fa;size:30px;font-weight:bold">3</td>
+  </tr>
+</table>
+<button onclick="transform()"class="btn btn-info">Transform</button>
+</div>
+    </div>
+  </div>
+</div>
+		</div>
+        <div id="menu4" class="tab-pane"><h4>Menu 4 Tab</h4></div>
+      </div>
+    </div>
+ </div>
+ </div>
+</div>
+<script>
+//
+const canvas = document.getElementById('myCanvas');
+const ctx = canvas.getContext('2d');
+// get the center of the canvas
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+ctx.translate(centerX, centerY);
+const squareSize = 40;
+
+grid();
+
+ctx.font = '16px Arial';
+ctx.fillStyle = 'black';
+ctx.strokeStyle = "red";
+// Set the position for the text
+var x = 5;
+var xoffset=3;
+var yoffset=3;
+var y = 15;
+function cordinates(){
+ctx.strokeStyle = 'black';
+for (let i = -8; i < 9; i++) {
+   x = squareSize * i;
+  // Draw the text at the specified position
+  ctx.fillText(i, x+xoffset, y+yoffset);
+}
+}
+//cordinates();
+//define coordinates
+var A=[];
+var B=[];
+var C=[];
+var D=[];
+function values()
+{
+A=[0,0];
+B=[40,0];
+C=[40,40];
+D=[0,40];
+}
+values();
+//points array
+var points=[A,B,C,D];
+function drawShape(){
+ctx.strokeStyle = "red";
+ctx.beginPath();
+ctx.moveTo(points[0][0], points[0][1]);
+for (let i = 1; i < points.length; i++) {
+  ctx.lineTo(points[i][0], points[i][1]);
+}
+ctx.closePath();
+ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+ctx.fill();
+}
+drawShape();
+//console.log(points);
+function transform(){
+values();
+refreshCanvas();
+//cordinates();
+grid();
+//define coordinates
+var points=[A,B,C,D];
+//object to transform
+//ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';;
+ctx.fillRect(A[0],A[1],5, 5);
+ctx.fillRect(B[0],B[1],5, 5);
+ctx.fillRect(C[0],C[1],5, 5);
+ctx.fillRect(D[0],D[1],5, 5);
+ctx.strokeStyle = "red";
+console.log(points);
+
+//ui matrix
+
+drawShape();
+var a=document.getElementById('a').textContent;
+var b=document.getElementById('b').textContent;
+var c=document.getElementById('c').textContent;
+var d=document.getElementById('d').textContent;
+//transformer matrix
+var transform1=[a,b]
+var transform2=[c,d]
+//transformation
+for (let i = 0; i < points.length; i++) {
+  let x = points[i][0];
+  let y = points[i][1];
+  points[i][0] = transform1[0] * x + transform1[1] * y;
+  points[i][1] = transform2[0] * x + transform2[1] * y;
+}var points=[A,B,C,D];
+//console.log(points);
+//ctx.fillStyle = 'green';
+// results
+ctx.fillRect(A[0],A[1],5, 5);
+ctx.fillRect(B[0],B[1],5, 5);
+ctx.fillRect(C[0],C[1],5, 5);
+ctx.fillRect(D[0],D[1],5, 5);
+ctx.strokeStyle = "red";
+ctx.beginPath();
+ctx.moveTo(points[0][0], points[0][1]);
+for (let i = 1; i < points.length; i++) {
+  ctx.lineTo(points[i][0], points[i][1]);
+}
+ctx.closePath();
+ctx.fillStyle = 'rgba(255, 100, 80, 0.5)';
+ctx.fill();
+//console.log(points);
+//drawShape();
+}
+function grid(){
+ctx.strokeStyle = 'black';
+const numRows = canvas.height / squareSize;
+const numCols = canvas.width / squareSize;
+for (let row = -squareSize; row < numRows; row++) {
+for (let col = -squareSize; col < numCols; col++) {
+const x = col * squareSize;
+const y = row * squareSize;
+ctx.lineWidth = 0.2;
+ctx.strokeRect(x, y, squareSize, squareSize);
+  }
+}
+}
+function refreshCanvas() {
+ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+	const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+ctx.translate(centerX, centerY);
+ctx.scale(1, -1);
+  }
+</script>
+  </body>
+</html>

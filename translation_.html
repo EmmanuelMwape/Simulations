@@ -1,0 +1,299 @@
+<style>
+/* ... (CSS code remains unchanged) ... */
+
+#eraserButton {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background-color: #ff0000;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#eraserButton.active {
+  background-color: #990000;
+}
+</style>
+  <!-- Include Bootstrap CSS -->
+<link href="css/bootstrap.min.css" rel="stylesheet">
+<div class="row">
+<h2>Translation</h2>
+<div class="col-sm-4"> 
+<div hidden>
+  <label for="xPosition">X-Axis Position: </label>
+  <input type="range" id="xPosition" min="-300" max="300" step="10" value="0">
+</div>
+
+<div hidden>
+  <label for="yPosition">Y-Axis Position: </label>
+  <input type="range" id="yPosition" min="-200" max="200" step="10" value="0">
+</div>
+
+<div hidden>
+  <label for="gridSize">Grid Size: </label>
+  <input type="range" id="gridSize" min="10" max="50" step="10" value="40">
+</div>
+
+<div hidden>
+  <label for="xAxisColor">X-Axis Color: </label>
+  <input type="color" id="xAxisColor" value="#000000">
+</div>
+
+<div hidden>
+  <label for="yAxisColor">Y-Axis Color: </label>
+  <input type="color" id="yAxisColor" value="#FF0000">
+</div>
+
+<div hidden>
+  <label for="canvasColor">Canvas Background Color: </label>
+  <input type="color" id="canvasColor" value="#FFFFFF">
+</div>
+
+<div hidden>
+  <label for="canvasWidth">Canvas Width: </label>
+  <input type="number" id="canvasWidth" value="800">
+</div>
+
+<div hidden>
+  <label for="canvasHeight">Canvas Height: </label>
+  <input type="number" id="canvasHeight" value="800">
+</div>
+  <div>
+    <button hidden id="eraserButton">Eraser</button>
+  </div>
+  <div hidden>
+    <label for="eraserSize">Eraser</label>
+    <input type="range" id="eraserSize" min="5" max="30" value="15">
+    <span id="eraserSizeValue">15</span>
+  </div>
+<button id="translateButton">Translate</button>
+<label>Translation Matrix</label>
+<input id="vx" placeholder="xvalues">
+<input id="vy" placeholder="yvalues">
+</div>
+<div class="col-sm-8">
+<canvas id="myCanvas" width="800" height="800"></canvas>
+</div>
+</div>
+<script>
+const canvas = document.getElementById("myCanvas");
+var vy=document.getElementById("vy");
+var vx=document.getElementById("vx");
+const ctx = canvas.getContext("2d");
+var originalCoordinates=[];
+var coordinates=[];
+function drawGrid() {
+  // Update canvas size
+  canvas.width = document.getElementById("canvasWidth").value;
+  canvas.height = document.getElementById("canvasHeight").value;
+
+  // Clear the canvas with the selected background color
+  ctx.fillStyle = document.getElementById("canvasColor").value;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Get the x-axis position from the slider
+  const xPosition = parseInt(document.getElementById("xPosition").value);
+
+  // Get the y-axis position from the slider
+  const yPosition = parseInt(document.getElementById("yPosition").value);
+
+  // Get the grid size from the slider
+  const gridSize = parseInt(document.getElementById("gridSize").value);
+
+  // Get the x-axis color from the color picker
+  const xAxisColor = document.getElementById("xAxisColor").value;
+
+  // Get the y-axis color from the color picker
+  const yAxisColor = document.getElementById("yAxisColor").value;
+
+  ctx.lineWidth = 1;
+
+  // Draw vertical grid lines
+  for (let x = (xPosition % gridSize) + gridSize; x <= canvas.width; x += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.strokeStyle = "#ccc"; // Grid lines color
+    ctx.stroke();
+  }
+
+  // Draw horizontal grid lines
+  for (let y = (yPosition % gridSize) + gridSize; y <= canvas.height; y += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.strokeStyle = "#ccc"; // Grid lines color
+    ctx.stroke();
+  }
+
+  // Draw x-axis
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height / 2 + yPosition);
+  ctx.lineTo(canvas.width, canvas.height / 2 + yPosition);
+  ctx.strokeStyle = xAxisColor; // X-axis color
+  ctx.stroke();
+
+  // Draw y-axis
+  ctx.beginPath();
+  ctx.moveTo(canvas.width / 2 + xPosition, 0);
+  ctx.lineTo(canvas.width / 2 + xPosition, canvas.height);
+  ctx.strokeStyle = yAxisColor; // Y-axis color
+  ctx.stroke();
+
+  // Label x-axis
+  ctx.fillStyle = xAxisColor;
+  for (let x = (xPosition % gridSize) + gridSize; x <= canvas.width; x += gridSize) {
+    ctx.fillText(((x - canvas.width / 2 - xPosition) / gridSize).toFixed(0), x - 5, canvas.height / 2 + yPosition + 15);
+  }
+
+  // Label y-axis
+  ctx.fillStyle = yAxisColor;
+  for (let y = (yPosition % gridSize) + gridSize; y <= canvas.height; y += gridSize) {
+    ctx.fillText((-(y - canvas.height / 2 - yPosition) / gridSize).toFixed(0), canvas.width / 2 + xPosition - 12, y+4);
+  }
+}
+// Add event listeners to the input elements
+document.getElementById("xPosition").addEventListener("input", drawGrid);
+document.getElementById("yPosition").addEventListener("input", drawGrid);
+document.getElementById("gridSize").addEventListener("input", drawGrid);
+document.getElementById("xAxisColor").addEventListener("input", drawGrid);
+document.getElementById("yAxisColor").addEventListener("input", drawGrid);
+document.getElementById("canvasColor").addEventListener("input", drawGrid);
+document.getElementById("canvasWidth").addEventListener("input", drawGrid);
+document.getElementById("canvasHeight").addEventListener("input", drawGrid);
+// Add click event listener to the canvas
+canvas.addEventListener("click", function (event) {
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = event.clientX - rect.left;
+  const mouseY = event.clientY - rect.top;
+    //Check for collisions after drawing the new circle
+	detectCollision(circles, mouseX, mouseY);
+  if (detectCollision(circles, mouseX, mouseY)) {
+    //console.log("Collision detected!");
+	// Draw a line from the previous point to the current point
+      ctx.beginPath();
+      ctx.moveTo(prevX, prevY);
+      ctx.lineTo(mouseX, mouseY);
+      ctx.strokeStyle = "blue"; // Line color
+      ctx.lineWidth = 2; // Line width
+      ctx.stroke()
+	  console.log("collision");
+  }else{
+  drawCircle(mouseX, mouseY);
+  originalCoordinates.push([mouseX,mouseY]);
+  	  // Display coordinates on the canvas using fillText
+  ctx.font = "14px Arial";
+  ctx.fillStyle = "black";
+  ctx.fillText("(" + ((mouseX-400)/40).toFixed(0) + ", " + ((400 - mouseY)/40).toFixed(0) + ")", mouseX + 5, mouseY + 5);
+  }
+  
+});
+let prevX;
+let prevY;
+function drawCircle(x, y) {
+  const radius = 2;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, 2 * Math.PI);
+  ctx.fillStyle = "blue";
+  ctx.fill();
+  // Draw a line from the previous point to the current point
+  ctx.beginPath();
+  ctx.moveTo(prevX, prevY);
+  ctx.lineTo(x, y);
+  ctx.strokeStyle = "blue"; // Line color
+  ctx.lineWidth = 2; // Line width
+  ctx.stroke()
+  // Store the coordinates of the circle
+  circles.push({ x: x, y: y });
+  coordinates.push({ x: x, y: y });
+  prevX = x; // Update the previous X coordinate
+  prevY = y; // Update the previous Y coordinate
+}
+const circles = []; // Array to store drawn circles
+  // Initial draw of the grid
+  drawGrid();
+
+function drawCoordinates(coordinates, color, opacity) {
+  const fillColor = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${opacity})`;
+  ctx.fillStyle = fillColor;
+  ctx.strokeStyle = fillColor; // Set stroke color to the same as fill color
+  ctx.beginPath();
+
+  coordinates.forEach(function(coord, index) {
+    ctx.arc(coord[0], coord[1], 3, 0, 2 * Math.PI);
+
+    // Connect points with lines
+    if (index < coordinates.length - 1) {
+      ctx.lineTo(coord[0], coord[1]);
+    }
+
+    // Display coordinates next to the point
+    ctx.fillStyle = "black"; // Set text color to black
+    ctx.fillText(`(${((coord[0]-400)/40).toFixed(0)}, ${((400-coord[1])/40).toFixed(0)})`, coord[0] + 10, coord[1] - 10);
+
+    // Reset fillStyle to the original color for the polygon fill
+    ctx.fillStyle = fillColor;
+  });
+
+  // Connect the last and first points to close the polygon
+  ctx.lineTo(coordinates[0][0], coordinates[0][1]);
+
+  ctx.fill(); // Fill the enclosed area with the specified color
+  ctx.stroke(); // Draw the outline with the specified color
+}
+
+function translateCoordinates(coordinates, translateX, translateY) {
+      var translationMatrix = [
+        [1, 0, translateX],
+        [0, 1, translateY],
+        [0, 0, 1]
+      ];
+
+      var translatedCoordinates = coordinates.map(function(coord) {
+        var x = coord[0];
+        var y = coord[1];
+
+        var newX = x * translationMatrix[0][0] + y * translationMatrix[0][1] + translationMatrix[0][2];
+        var newY = x * translationMatrix[1][0] + y * translationMatrix[1][1] + translationMatrix[1][2];
+
+        return [newX, newY];
+      });
+
+      return translatedCoordinates;
+    }
+// Function to detect collisions between circles
+function detectCollision(circles, newX, newY) {
+  // Radius of the circles (assuming the same for all circles)
+  const radius = 3;
+
+  // Check for collisions with existing circles
+  for (let i = 0; i < circles.length; i++) {
+    const existingX = circles[i].x;
+    const existingY = circles[i].y;
+
+    // Calculate the distance between the centers of the circles
+    const distance = Math.sqrt(Math.pow(newX - existingX, 2) + Math.pow(newY - existingY, 2));
+	console.log(distance);
+    // If the distance is less than the sum of their radii, collision occurred
+    if (distance < 2 * radius) {
+      return true;
+    }
+  }
+
+  // No collision detected
+  return false;
+}
+    document.getElementById("translateButton").addEventListener("click", function() {
+	var xt=parseInt(vx.value)*40
+	var yt=parseInt(vy.value)*-40
+      var translatedCoordinates = translateCoordinates(originalCoordinates, xt, yt);
+      //drawCoordinates(originalCoordinates, "blue");
+      drawCoordinates(translatedCoordinates, [255, 0, 0], 0.5);
+    });
+
+</script>
+    <!-- Add Bootstrap JS -->
+    <script src="js/jquery.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
