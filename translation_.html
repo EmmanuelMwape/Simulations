@@ -1,3 +1,6 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<!-- Bootstrap JS -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <style>
 /* ... (CSS code remains unchanged) ... */
 
@@ -14,12 +17,20 @@
 #eraserButton.active {
   background-color: #990000;
 }
+input {
+  width: 50px; /* You can adjust the value according to your needs */
+}
+    /* Custom styling for centering the container */
+    .custom-center {
+      justify-content: center;
+      align-items: center;
+    }
 </style>
   <!-- Include Bootstrap CSS -->
 <link href="css/bootstrap.min.css" rel="stylesheet">
 <div class="row">
-<h2>Translation</h2>
-<div class="col-sm-4"> 
+<div class="text-primary bg-light"><h4>Translation</h4></div>
+<div class="col-sm-2"> 
 <div hidden>
   <label for="xPosition">X-Axis Position: </label>
   <input type="range" id="xPosition" min="-300" max="300" step="10" value="0">
@@ -67,12 +78,15 @@
     <input type="range" id="eraserSize" min="5" max="30" value="15">
     <span id="eraserSizeValue">15</span>
   </div>
-<button id="translateButton">Translate</button>
-<label>Translation Matrix</label>
-<input id="vx" placeholder="xvalues">
-<input id="vy" placeholder="yvalues">
+  <div class="container custom-center">
+
+<label class="text-warning text-center">Translation Matrix</label>
+<input style="width:80px"class="form-control" id="vx" placeholder="xvalues">
+<input style="width:80px"class="form-control"id="vy" placeholder="yvalues"><br>
+<button class="btn btn-sm btn-info" id="translateButton">Translate</button>
 </div>
-<div class="col-sm-8">
+</div>
+<div class="col-sm-10">
 <canvas id="myCanvas" width="800" height="800"></canvas>
 </div>
 </div>
