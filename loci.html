@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loci</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<!-- Bootstrap JS -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <style>
+    canvas {
+      border: 1px solid #000;
+      display: block;
+      margin: 5px auto;
+    }
+        .container {
+            position: relative;
+            width: 1100px;
+            height: 800px;
+            border: 1px solid #ccc;
+            overflow: hidden;
+        }
+        .draggable {
+            position: absolute;
+            cursor: move;
+            user-drag: element;
+			width: 500px;
+        }
+
+		.draggable img {
+            max-width: 100%;
+            max-height: 100%;
+            display: block; /* To remove extra spacing below the image */
+            margin: auto; /* Center the image horizontally within the div */
+        }
+	    .centered-div {
+      text-align: center;
+    }
+</style>
+</head>
+<body>
+<div class="text-info text-center bg-light"><h2>Loci and Constructions</h2></div>
+<div class=" centered-div bg-light">
+    <button class="btn btn-warning" id="ruler" onclick="debyId(this)"><i class="fas fa-ruler"></i> Ruler</button>
+    <button class="btn btn-info" id="protractor" onclick="debyId(this)"><i class="fas fa-compass"></i> Protractor</button>
+    <button class="btn btn-primary" id="line" onclick="debyId(this)"><i class="fas fa-grip-lines"></i> Line</button>
+    <button class="btn btn-success" id="compass" onclick="debyId(this)"><i class="fas fa-drafting-compass"></i> Compass</button>
+    <button class="btn btn-secondary" id="circle" onclick="debyId(this)"><i class="fas fa-circle"></i> Circle</button>
+    <p hidden id="distanceDisplay">Distance: 0</p>
+  </div>
+</div>
+<div class="container">
+<div class="draggable">
+  <img style="opacity:0.7"id="draggable-image" src="ruler.png" alt="Draggable Image">
+</div>
+<canvas id="arcCanvas" width="900" height="600"></canvas>
+
+</div>
+<script>
+var mode;
+var actid;
+  // Get the canvas element and its 2d context
+  const canvas = document.getElementById('arcCanvas');
+  const image = document.getElementById('draggable-image');
+  const ctx = canvas.getContext('2d');
+ function debyId(eve){
+	//let thisid=eve.id;
+	//let teacher=eve.name;
+	actid=eve.getAttribute("id");
+	//console.log(actid);
+	mode=actid;
+if(mode=="protractor"){image.setAttribute("src",mode+".png")}
+if(mode=="ruler"){image.setAttribute("src",mode+".png")}
+//if(mode=="compass"){image.setAttribute("src",mode+".png");}
+if(mode=="ruler"){image.setAttribute("src",mode+".png")}
+
+if(mode=="compass"){
+  // Variables to store points A and B
+  let pointA = null;
+  let pointB = null;
+  // Function to calculate the distance between two points
+  function calculateDistance(point1, point2) {
+    return Math.sqrt((point2.x - point1.x) ** 2 + (point2.y - point1.y) ** 2);
+  }
+   // Function to calculate the angle between two points and return it in radians
+  function calculateAngle(point1, point2) {
+    return Math.atan2(point2.y - point1.y, point2.x - point1.x);
+  }
+  // Function to draw a point at the specified coordinates
+  function drawPoint(x, y) {
+    ctx.fillStyle = 'red';
+    ctx.beginPath();
+    ctx.arc(x, y, 3, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+  // draw an arc with A as center and B as the starting point
+  function drawArc(centerX, centerY, startX, startY) {
+    const radius = Math.sqrt((startX - centerX) ** 2 + (startY - centerY) ** 2);
+    const angle = calculateAngle({ x: centerX, y: centerY }, { x: startX, y: startY });
+
+    //ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+    ctx.strokeStyle = 'gray';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, angle - Math.PI / 4, angle + Math.PI / 2);
+    ctx.stroke();
+  }
+  // Event listener for mouse click
+  canvas.addEventListener('mousedown', function (event) {
+    const rect = canvas.getBoundingClientRect();
+    const clickedPoint = {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top
+    };
+
+    if (!pointA) {
+      // Set point A on the first click
+      pointA = clickedPoint;
+	  
+    } else if (!pointB && mode=="compass") {
+      // Set point B on the second click
+      pointB = clickedPoint;
+
+      // Draw the arc
+      drawArc(pointA.x, pointA.y, pointB.x, pointB.y);
+
+      // Reset points for the next arc
+      pointA = null;
+      pointB = null;
+    }
+  });
+
+    // Event listener for mouse click
+  canvas.addEventListener('click', function(event) {
+    // Get the mouse coordinates relative to the canvas
+    const mouseX = event.clientX - canvas.getBoundingClientRect().left;
+    const mouseY = event.clientY - canvas.getBoundingClientRect().top;
+	console.log(actid);
+    // Draw a point at the clicked position
+    drawPoint(mouseX, mouseY);
+  });
+
+   // Event listener for mouse move
+  canvas.addEventListener('mousemove', function (event) {
+    if (pointA && !pointB) {
+      const rect = canvas.getBoundingClientRect();
+      const currentPoint = {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+      };
+
+      // Calculate and display the distance between points A and B as the mouse moves
+      const distance = calculateDistance(pointA, currentPoint);
+      document.getElementById('distanceDisplay').innerText = `Distance: ${(distance/30).toFixed(2)}`;
+
+      // Draw the arc dynamically
+      //drawSmallPerpendicularArc(pointA.x, pointA.y, currentPoint.x, currentPoint.y);
+    }
+  });
+  
+}
+  let isDragging = false;
+  let offsetX, offsetY;
+  let rotation = 0;
+image.addEventListener('wheel',   function(e) {
+    const delta = Math.sign(e.deltaY);
+    rotation += delta * 0.5;
+    image.style.transform = `rotate(${rotation}deg)`;
+    e.preventDefault();
+  });
+
+ if(mode=="line"){
+ var lineCounter=0;
+ var coordinatesAB=[];
+ let isDrawing = false;
+        canvas.addEventListener('click', function(event) {
+            startCoordinates = getMouseCoordinates(event);
+			    // Get the mouse coordinates relative to the canvas
+    const mouseX = event.clientX - canvas.getBoundingClientRect().left;
+    const mouseY = event.clientY - canvas.getBoundingClientRect().top;
+            isDrawing = true;
+			  // Function to draw a point at the specified coordinates
+			coordinatesAB.push(startCoordinates);
+			drawPoint(mouseX, mouseY);
+			lineCounter=lineCounter+1;
+			if(lineCounter==2 && mode=="line"){drawLine(coordinatesAB[0],coordinatesAB[1]);lineCounter=0;
+			coordinatesAB=[];}
+			
+			//console.log(startCoordinates);
+			console.log(actid);
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
+
+
+        function drawLine(start, end) {
+            ctx.beginPath();
+            ctx.moveTo(start.x, start.y);
+            ctx.lineTo(end.x, end.y);
+            ctx.stroke();
+        }
+
+        function getMouseCoordinates(event) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top
+            };
+        }
+				function drawPoint(x, y) {
+				ctx.fillStyle = 'red';
+				ctx.beginPath();
+				ctx.arc(x, y, 3, 0, 2 * Math.PI);
+				ctx.fill();							}
+ }
+ }
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const draggables = document.querySelectorAll(".draggable");
+
+    draggables.forEach(draggable => {
+        draggable.addEventListener("mousedown", startDrag);
+        draggable.addEventListener("mousemove", drag);
+        draggable.addEventListener("mouseup", stopDrag);
+    });
+
+    let isDragging = false;
+    let activeDraggable = null;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    function startDrag(event) {
+        isDragging = true;
+        activeDraggable = this;
+        offsetX = event.clientX - this.getBoundingClientRect().left;
+        offsetY = event.clientY - this.getBoundingClientRect().top;
+    }
+
+    function drag(event) {
+        if (!isDragging) return;
+
+        const container = document.querySelector(".container");
+        const maxX = container.offsetWidth - activeDraggable.offsetWidth;
+        const maxY = container.offsetHeight - activeDraggable.offsetHeight;
+        
+        let x = event.clientX - container.getBoundingClientRect().left - offsetX;
+        let y = event.clientY - container.getBoundingClientRect().top - offsetY;
+        
+        x = Math.max(0, Math.min(x, maxX));
+        y = Math.max(0, Math.min(y, maxY));
+        
+        activeDraggable.style.left = x + "px";
+        activeDraggable.style.top = y + "px";
+    }
+
+    function stopDrag() {
+        isDragging = false;
+        activeDraggable = null;
+    }
+});
+if(mode=="circle"){
+//const canvas = document.getElementById('drawCanvas');
+        //const context = canvas.getContext('2d');
+        var pointAA = null;
+        var pointBB = null;
+
+        // Event listener for mouse clicks
+        canvas.addEventListener('click', function (event) {
+            const rect = canvas.getBoundingClientRect();
+            const clickCoordinates = {
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top
+            };
+
+            // If pointA is null, set it as the first click; otherwise, set pointB
+            if (!pointAA) {
+                pointAA = clickCoordinates;
+            } else {
+                pointBB = clickCoordinates;
+
+                // Calculate the radius (distance between A and B)
+                const radius = calculateDistance(pointAA, pointBB);
+
+                // Draw the circle
+                //ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.beginPath();
+                ctx.arc(pointAA.x, pointAA.y, radius, 0, 2 * Math.PI);
+                ctx.stroke();
+
+                // Reset points for the next circle
+                pointAA = null;
+                pointBB = null;
+            }
+        });
+
+        // Helper function to calculate distance between two points
+        function calculateDistance(point1, point2) {
+            const dx = point2.x - point1.x;
+            const dy = point2.y - point1.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+}
+    document.addEventListener("DOMContentLoaded", function() {
+      
+      let isDrawing = false;
+      
+      // Event listener for mouse down to start drawing
+      canvas.addEventListener('mousedown', startDrawing);
+
+      // Event listener for mouse move to continue drawing
+      canvas.addEventListener('mousemove', draw);
+
+      // Event listener for mouse up to stop drawing
+      canvas.addEventListener('mouseup', stopDrawing);
+
+      function startDrawing(e) {
+        isDrawing = true;
+        draw(e);  // Draw a point immediately on mouse down
+      }
+
+      function draw(e) {
+        if (!isDrawing) return;
+
+        // Set the line style
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+
+        // Start drawing path
+        ctx.beginPath();
+
+        // Set the drawing point
+        ctx.moveTo(e.clientX - canvas.getBoundingClientRect().left, e.clientY - canvas.getBoundingClientRect().top);
+
+        // Draw a line to the new point
+        ctx.lineTo(e.clientX - canvas.getBoundingClientRect().left, e.clientY - canvas.getBoundingClientRect().top);
+
+        // Draw the path
+        ctx.stroke();
+      }
+
+      function stopDrawing() {
+        isDrawing = false;
+        ctx.closePath();  // Close the drawing path
+      }
+    });
+</script>
+</body>
+</html>
