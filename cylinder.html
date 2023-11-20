@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js Cylinder with Controls, Floor, Light, Shadows, and Light Position Control</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+    <script src="https://github.com/mrdoob/three.js/blob/dev/examples/jsm/controls/OrbitControls.js"></script>
+    <style>
+        body { margin: 0; }
+        #info-card { position: absolute; bottom: 10px; right: 10px; max-width: 300px; }
+    </style>
+</head>
+<body>
+    <div class="card" id="info-card">
+        <div class="card-header bg-primary">
+            Cylinder Information
+        </div>
+        <div class="card-body">
+            <p id="volume">Volume: </p>
+            <p id="surface-area">Surface Area: </p>
+        </div>
+    </div>
+    <script>
+
+        // Set up the scene
+        var scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xffffff); // Set light gray background
+
+        // Set up the camera
+        var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 5;
+
+        // Set up the renderer with shadows
+        var renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.body.appendChild(renderer.domElement);
+
+        // Add directional light with shadows
+        var directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(5, 5, 5);
+        directionalLight.castShadow = true; // Enable shadow casting
+        scene.add(directionalLight);
+
+        // Add ambient light to the scene
+        var ambientLight = new THREE.AmbientLight(0x909090); // Choose a color for ambient light
+        scene.add(ambientLight);
+
+        // Create axes helpers
+        var axesHelper = new THREE.AxesHelper(5);
+        scene.add(axesHelper);
+
+        // Set up shadow properties for the light
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
+        directionalLight.shadow.camera.near = 0.5;
+        directionalLight.shadow.camera.far = 50;
+
+        // Create a plane for the ground
+        var groundGeometry = new THREE.PlaneGeometry(10, 10, 32, 32);
+        var groundMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+
+        var checkerboardTexture = new THREE.TextureLoader().load('floor.png'); // Replace 'checkerboard.png' with the path to your texture
+        checkerboardTexture.wrapS = THREE.RepeatWrapping;
+        checkerboardTexture.wrapT = THREE.RepeatWrapping;
+        checkerboardTexture.repeat.set(4, 4);
+
+        groundMaterial.map = checkerboardTexture;
+
+        var ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2; // Rotate the ground to be horizontal
+        ground.position.y = -2; // Position the ground beneath the cylinder
+        ground.receiveShadow = true; // Enable shadow receiving
+        scene.add(ground);
+
+        // Create a cylinder geometry
+        var cylinderGeometry = new THREE.CylinderBufferGeometry(1, 1, 2, 32, 1, false);
+
+        // Create a material with vertex colors
+        var material = new THREE.MeshPhongMaterial({ color: "gold" });
+
+        // Create a mesh for the cylinder
+        var cylinder = new THREE.Mesh(cylinderGeometry, material);
+        cylinder.castShadow = true; // Enable shadow casting
+        scene.add(cylinder);
+
+        // Add controls using dat.gui
+        var gui = new dat.GUI();
+
+        var rotationFolder = gui.addFolder('Rotation');
+        var xRotation = rotationFolder.add(cylinder.rotation, 'x', 0, Math.PI * 2).name('X-Axis');
+        var yRotation = rotationFolder.add(cylinder.rotation, 'y', 0, Math.PI * 2).name('Y-Axis');
+        var zRotation = rotationFolder.add(cylinder.rotation, 'z', 0, Math.PI * 2).name('Z-Axis');
+        rotationFolder.open();
+
+        // Add a slider for changing perspective
+        var perspectiveControl = gui.add(camera, 'fov', 1, 179).name('Perspective'); // Adjust the range as needed
+
+        // Update the camera's perspective on slider change
+        perspectiveControl.onChange(function (value) {
+            camera.fov = value;
+            camera.updateProjectionMatrix();
+        });
+
+        // Create a material with a brick texture for the walls
+        var brickTexture = new THREE.TextureLoader().load('bl.jpg'); // Replace with the path to your brick texture
+        brickTexture.wrapS = THREE.RepeatWrapping;
+        brickTexture.wrapT = THREE.RepeatWrapping;
+        brickTexture.repeat.set(8, 8); // Adjust the repeat values based on your texture
+
+        var wallMaterial = new THREE.MeshPhongMaterial({ map: brickTexture });
+
+        // Create planes for the walls
+        var wallGeometry = new THREE.PlaneGeometry(10, 10, 32, 32);
+
+        var backWall = new THREE.Mesh(wallGeometry, wallMaterial);
+        backWall.position.z = -5;
+        backWall.position.y = 2;
+        backWall.rotation.x = Math.PI;
+
+        var leftWall = new THREE.Mesh(wallGeometry, wallMaterial);
+        leftWall.position.x = -5;
+        leftWall.position.y = 2;
+        leftWall.rotation.y = Math.PI / 2;
+
+        var rightWall = new THREE.Mesh(wallGeometry, wallMaterial);
+        rightWall.position.x = 5;
+        rightWall.position.y = 2;
+        rightWall.rotation.y = -Math.PI / 2;
+
+        var frontWall = new THREE.Mesh(wallGeometry, wallMaterial);
+        frontWall.position.x = 5;
+        frontWall.position.y = -2;
+        frontWall.rotation.y = -Math.PI / 2;
+
+        scene.add(backWall, leftWall, rightWall, frontWall);
+
+        // Update orientation on slider change
+        xRotation.onChange(function (value) {
+            cylinder.rotation.x = value;
+        });
+
+        yRotation.onChange(function (value) {
+            cylinder.rotation.y = value;
+        });
+
+        zRotation.onChange(function (value) {
+            cylinder.rotation.z = value;
+        });
+
+        // Add light position controls
+        var lightFolder = gui.addFolder('Light Position');
+        var lightX = lightFolder.add(directionalLight.position, 'x', -10, 10).name('X');
+        var lightY = lightFolder.add(directionalLight.position, 'y', -10, 10).name('Y');
+        var lightZ = lightFolder.add(directionalLight.position, 'z', -10, 10).name('Z');
+        lightFolder.open();
+
+        // Update light position on slider change
+        lightX.onChange(function (value) {
+            directionalLight.position.x = value;
+        });
+
+        lightY.onChange(function (value) {
+            directionalLight.position.y = value;
+        });
+
+        lightZ.onChange(function (value) {
+            directionalLight.position.z = value;
+        });
+
+        // Add cylinder radius and height controls
+        var radiusControl = gui.add(cylinderGeometry.parameters, 'radiusTop', 0.1, 5).name('Top Radius');
+        var heightControl = gui.add(cylinderGeometry.parameters, 'height', 1, 5).name('Height');
+
+        // Update cylinder size on slider change
+        radiusControl.onChange(function (value) {
+            updateCylinderGeometry(value, cylinderGeometry.parameters.radiusBottom, cylinderGeometry.parameters.height);
+        });
+
+        heightControl.onChange(function (value) {
+            updateCylinderGeometry(cylinderGeometry.parameters.radiusTop, cylinderGeometry.parameters.radiusBottom, value);
+        });
+
+        // Set default face color
+        var defaultColor = "gold"; // Orange
+
+        // Function to update cylinder geometry
+        function updateCylinderGeometry(topRadius, bottomRadius, height) {
+            scene.remove(cylinder);
+
+            // Recreate the cylinder geometry
+            cylinderGeometry = new THREE.CylinderBufferGeometry(
+                topRadius !== undefined ? topRadius : cylinderGeometry.parameters.radiusTop,
+                bottomRadius !== undefined ? bottomRadius : cylinderGeometry.parameters.radiusBottom,
+                height !== undefined ? height : cylinderGeometry.parameters.height,
+                cylinderGeometry.parameters.radialSegments,
+                cylinderGeometry.parameters.heightSegments,
+                cylinderGeometry.parameters.openEnded
+            );
+
+            // Recreate the cylinder mesh
+            cylinder = new THREE.Mesh(cylinderGeometry, material);
+            cylinder.castShadow = true;
+            scene.add(cylinder);
+            updateInfo();
+        }
+
+        // Function to update cylinder colors
+        function updateCylinderColors() {
+            for (let i = 0; i < cylinderGeometry.attributes.position.count; i++) {
+                material.color.setHex(tempFaceColors[i].FaceColor);
+            }
+        }
+
+        // Animation loop
+        var animate = function () {
+            requestAnimationFrame(animate);
+
+            // Render the scene
+            renderer.render(scene, camera);
+
+            // Add any additional animations or updates here
+        };
+
+        // Function to update volume and surface area display
+        function updateInfo() {
+            var volume = Math.PI * (cylinderGeometry.parameters.radiusTop ** 2 - cylinderGeometry.parameters.radiusBottom ** 2) * cylinderGeometry.parameters.height;
+            var surfaceArea = 2 * Math.PI * (cylinderGeometry.parameters.radiusTop + cylinderGeometry.parameters.radiusBottom) * Math.sqrt((cylinderGeometry.parameters.radiusTop - cylinderGeometry.parameters.radiusBottom) ** 2 + cylinderGeometry.parameters.height ** 2) + 2 * Math.PI * cylinderGeometry.parameters.radiusTop ** 2;
+
+            // Display volume and surface area
+            document.getElementById('volume').innerText = 'Volume: ' + volume.toFixed(2);
+            document.getElementById('surface-area').innerText = 'Surface Area: ' + surfaceArea.toFixed(2);
+        }
+
+        updateInfo();
+        var isDragging = false;
+        var previousMousePosition = {
+            x: 0,
+            y: 0
+        };
+
+        // Event listeners for mouse interactions
+        document.addEventListener('mousedown', onMouseDown);
+        document.addEventListener('mouseup', onMouseUp);
+        document.addEventListener('mousemove', onMouseMove);
+
+        function onMouseDown(event) {
+            isDragging = true;
+            previousMousePosition = {
+                x: event.clientX,
+                y: event.clientY
+            };
+        }
+
+        function onMouseUp() {
+            isDragging = false;
+        }
+
+        function onMouseMove(event) {
+            if (!isDragging) return;
+
+            var deltaMove = {
+                x: event.clientX - previousMousePosition.x,
+                y: event.clientY - previousMousePosition.y
+            };
+
+            // Rotate the cylinder based on mouse movement
+            cylinder.rotation.y += deltaMove.x * 0.01;
+            cylinder.rotation.x += deltaMove.y * 0.01;
+
+            // Update previous mouse position
+            previousMousePosition = {
+                x: event.clientX,
+                y: event.clientY
+            };
+        }
+
+        // Start the animation loop
+        animate();
+    </script>
+</body>
+</html>
