@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js Cube with Controls, Floor, Light, Shadows, and Light Position Control</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+    <style>
+        body { margin: 0; }
+        #info-card { position: absolute; bottom: 10px; right: 10px; max-width: 300px; }
+    </style>
+    <link rel="stylesheet" href="css/bootstrap.css">
+
+    <link rel="stylesheet" href=>
+    <!-- Bootstrap JS -->
+    <script src="js/Jquery.js"></script>
+    <script src="js/bootstrap.js"></script>
+    <script src="js/font-awesome.js"></script>
+</head>
+<body>
+    <div class="card" id="info-card">
+        <div class="card-header bg-primary">
+            Cube Information
+        </div>
+        <div class="card-body">
+            <p id="volume">Volume: </p>
+            <p id="surface-area">Surface Area: </p>
+        </div>
+    </div>
+    <script>
+        // Set up the scene
+        var scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xffffff); // Set light gray background
+
+        // Set up the camera
+        var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 5;
+
+        // Set up the renderer with shadows
+        var renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.body.appendChild(renderer.domElement);
+
+        // Add directional light with shadows
+        var directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(5, 5, 0);
+        directionalLight.castShadow = true; // Enable shadow casting
+        scene.add(directionalLight);
+        // Add ambient light to the scene
+        var ambientLight = new THREE.AmbientLight(0x909090); // Choose a color for ambient light
+        scene.add(ambientLight);
+        // Create axes helpers
+        var axesHelper = new THREE.AxesHelper(5);
+        scene.add(axesHelper);
+
+        // Set up shadow properties for the light
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
+        directionalLight.shadow.camera.near = 0.5;
+        directionalLight.shadow.camera.far = 50;
+
+        // Create a plane for the ground
+        var groundGeometry = new THREE.PlaneGeometry(10, 10, 32, 32);
+        var groundMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+
+        var checkerboardTexture = new THREE.TextureLoader().load('floor.png'); // Replace 'checkerboard.png' with the path to your texture
+        checkerboardTexture.wrapS = THREE.RepeatWrapping;
+        checkerboardTexture.wrapT = THREE.RepeatWrapping;
+        checkerboardTexture.repeat.set(4, 4);
+
+        groundMaterial.map = checkerboardTexture;
+
+        var ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2; // Rotate the ground to be horizontal
+        ground.position.y = -2; // Position the ground beneath the cube
+        ground.receiveShadow = true; // Enable shadow receiving
+        scene.add(ground);
+
+        // Create a cube geometry
+        var cubeGeometry = new THREE.BoxGeometry(2, 3, 2);
+
+        // Create a material with vertex colors
+        var material = new THREE.MeshPhongMaterial({ color: "gold" });
+
+        // Create a mesh for the cube
+        var cube = new THREE.Mesh(cubeGeometry, material);
+        cube.castShadow = true; // Enable shadow casting
+        scene.add(cube);
+
+        // Add controls using dat.gui
+        var gui = new dat.GUI();
+
+        var rotationFolder = gui.addFolder('Rotation');
+        var xRotation = rotationFolder.add(cube.rotation, 'x', 0, Math.PI * 2).name('X-Axis');
+        var yRotation = rotationFolder.add(cube.rotation, 'y', 0, Math.PI * 2).name('Y-Axis');
+        var zRotation = rotationFolder.add(cube.rotation, 'z', 0, Math.PI * 2).name('Z-Axis');
+        rotationFolder.open();
+
+        // Add a slider for changing perspective
+        var perspectiveControl = gui.add(camera, 'fov', 1, 179).name('Perspective'); // Adjust the range as needed
+
+        // Update the camera's perspective on slider change
+        perspectiveControl.onChange(function (value) {
+            camera.fov = value;
+            camera.updateProjectionMatrix();
+        });
+
+        // Create a material with a brick texture for the walls
+        var brickTexture = new THREE.TextureLoader().load('bl.jpg'); // Replace with the path to your brick texture
+        brickTexture.wrapS = THREE.RepeatWrapping;
+        brickTexture.wrapT = THREE.RepeatWrapping;
+        brickTexture.repeat.set(8, 8); // Adjust the repeat values based on your texture
+
+        var wallMaterial = new THREE.MeshPhongMaterial({ map: brickTexture });
+
+var wallMaterial = new THREE.MeshPhongMaterial({ map: brickTexture });
+
+// Create planes for the walls
+var wallGeometry = new THREE.PlaneGeometry(10, 10, 32, 32);
+
+var backWall = new THREE.Mesh(wallGeometry, wallMaterial);
+backWall.position.z = -5;
+backWall.position.y = 2;
+backWall.rotation.x = Math.PI;
+
+var leftWall = new THREE.Mesh(wallGeometry, wallMaterial);
+leftWall.position.x = -5;
+leftWall.position.y = 2;
+leftWall.rotation.y = Math.PI / 2;
+
+var rightWall = new THREE.Mesh(wallGeometry, wallMaterial);
+rightWall.position.x = 5;
+rightWall.position.y = 2;
+rightWall.rotation.y = -Math.PI / 2;
+
+var frontWall = new THREE.Mesh(wallGeometry, wallMaterial);
+frontWall.position.x = 5;
+frontWall.position.y = -2;
+frontWall.rotation.y = -Math.PI / 2;
+
+scene.add(backWall, leftWall, rightWall,frontWall);
+
+        // Update orientation on slider change
+        xRotation.onChange(function(value) {
+            cube.rotation.x = value;
+        });
+
+        yRotation.onChange(function(value) {
+            cube.rotation.y = value;
+        });
+
+        zRotation.onChange(function(value) {
+            cube.rotation.z = value;
+        });
+
+        // Add light position controls
+        var lightFolder = gui.addFolder('Light Position');
+        var lightX = lightFolder.add(directionalLight.position, 'x', -10, 10).name('X');
+        var lightY = lightFolder.add(directionalLight.position, 'y', -10, 10).name('Y');
+        var lightZ = lightFolder.add(directionalLight.position, 'z', -10, 10).name('Z');
+        lightFolder.open();
+
+        // Update light position on slider change
+        lightX.onChange(function(value) {
+            directionalLight.position.x = value;
+        });
+
+        lightY.onChange(function(value) {
+            directionalLight.position.y = value;
+        });
+
+        lightZ.onChange(function(value) {
+            directionalLight.position.z = value;
+        });
+
+        // Add cube size controls
+        var widthControl = gui.add(cubeGeometry.parameters, 'width', 1, 5).name('Width').step(1);
+        var heightControl = gui.add(cubeGeometry.parameters, 'height', 1, 5).name('Height').step(1);
+        var depthControl = gui.add(cubeGeometry.parameters, 'depth', 1, 5).name('Depth').step(1);
+
+        // Update cube size on slider change
+        widthControl.onChange(function(value) {
+            updateCubeGeometry(value, cubeGeometry.parameters.height, cubeGeometry.parameters.depth);
+        });
+
+        heightControl.onChange(function(value) {
+            updateCubeGeometry(cubeGeometry.parameters.width, value, cubeGeometry.parameters.depth);
+        });
+
+        depthControl.onChange(function(value) {
+            updateCubeGeometry(cubeGeometry.parameters.width, cubeGeometry.parameters.height, value);
+        });
+
+        // Set default face color
+        var defaultColor = "gold"; // Orange
+
+        // Function to update cube geometry
+        function updateCubeGeometry(width, height, depth) {
+            scene.remove(cube);
+
+            // Recreate the cube geometry
+            cubeGeometry = new THREE.BoxGeometry(
+                width !== undefined ? width : cubeGeometry.parameters.width,
+                height !== undefined ? height : cubeGeometry.parameters.height,
+                depth !== undefined ? depth : cubeGeometry.parameters.depth
+            );
+
+            // Recreate the cube mesh
+            cube = new THREE.Mesh(cubeGeometry, material);
+            cube.castShadow = true;
+            scene.add(cube);
+
+            updateInfo();
+        }
+
+        // Function to update volume and surface area display
+        function updateInfo() {
+            var volume = cubeGeometry.parameters.width * cubeGeometry.parameters.height * cubeGeometry.parameters.depth;
+            var surfaceArea = 2 * (cubeGeometry.parameters.width * cubeGeometry.parameters.height +
+                                   cubeGeometry.parameters.width * cubeGeometry.parameters.depth +
+                                   cubeGeometry.parameters.height * cubeGeometry.parameters.depth);
+
+            // Display volume and surface area
+            document.getElementById('volume').innerText = 'Volume: ' + volume.toFixed(2);
+            document.getElementById('surface-area').innerText = 'Surface Area: ' + surfaceArea.toFixed(2);
+        }
+
+        updateInfo();
+
+        // Animation loop
+        var animate = function () {
+            requestAnimationFrame(animate);
+
+            // Render the scene
+            renderer.render(scene, camera);
+
+            // Add any additional animations or updates here
+        };
+
+        var isDragging = false;
+        var previousMousePosition = {
+            x: 0,
+            y: 0
+        };
+
+        // Event listeners for mouse interactions
+        document.addEventListener('mousedown', onMouseDown);
+        document.addEventListener('mouseup', onMouseUp);
+        document.addEventListener('mousemove', onMouseMove);
+
+        function onMouseDown(event) {
+            isDragging = true;
+            previousMousePosition = {
+                x: event.clientX,
+                y: event.clientY
+            };
+        }
+
+        function onMouseUp() {
+            isDragging = false;
+        }
+
+        function onMouseMove(event) {
+            if (!isDragging) return;
+
+            var deltaMove = {
+                x: event.clientX - previousMousePosition.x,
+                y: event.clientY - previousMousePosition.y
+            };
+
+            // Rotate the cube based on mouse movement
+            cube.rotation.y += deltaMove.x * 0.01;
+            cube.rotation.x += deltaMove.y * 0.01;
+
+            // Update previous mouse position
+            previousMousePosition = {
+                x: event.clientX,
+                y: event.clientY
+            };
+        }
+
+        // Start the animation loop
+        animate();
+    </script>
+</body>
+</html>
