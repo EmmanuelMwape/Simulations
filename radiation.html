@@ -7,37 +7,41 @@
     <title>Alpha,beta and Gamma Radiation Simulation</title>
 </head>
 <body class="bg-white">
-    <div class="container mt-2">
+    <div class="mt-2">
        <div class="text-center bg-light"> <h3 class="mb-0"><span class="text-danger">Alpha</span> <span class="text-info">Beta </span> and <span class="text-warning">Gamma </span> rays in magnetic fields.</h3></div>
         <div class="row">
   
-        <div class="col-4">
-    <label for="magneticFieldStrength" class="mt-3">Magnetic Field Strength:</label><b><span id="fieldStrength" style="display: ; width: 30px; height: 30px; background: #00f; border-radius: 50%; margin-left: 10px;color: #fff">1</span></b>
-    <input type="range" id="magneticFieldStrength" min="0" max="2" step="0.1" value="1" class="form-control">
+        <div class="col-4 text-center">
+<label for="magneticFieldStrength" class="mt-3">
+    <h5>Magnetic Field Strength:</h5>
+</label>
+<b>
+    <span id="fieldStrength" style="display: inline-block; width: 30px; height: 30px; background: #00f; border-radius: 50%; margin-left: 10px;color: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);">
+        1
+    </span>
+</b>
+<input type="range" id="magneticFieldStrength" min="0" max="2" step="0.1" value="1" class="form-control" style="box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);">
+
     
         <button id="startButton" class="btn btn-primary mt-3">Start</button>
         <button id="resetButton" class="btn btn-warning mt-3">Reset</button>
 		<hr>
 <div id="simulation-description">
         <h4>The Radiation Simulation</h4>
-        <p>Explore the behaviour of <span style="color: #dc3545;">alpha</span>, <span style="color: #007bff;">beta</span>, and <span style="color: #28a745;">gamma rays</span> as they pass through a magnetic field. This Virtual lab  introduces three  particles: <strong>alpha</strong> (α), <strong>beta</strong> (β), and <strong>gamma</strong> (γ), each  with unique charges and masses. By controlling the magnetic field strength through a slider and starting the simulation with the "Start" button, observe trajectories influenced by the <em>Lorentz force</em></p>
+        <p style="text-align:justify">Explore the behaviour of <span style="color: #dc3545;">alpha</span>, <span style="color: #007bff;">beta</span>, and <span style="color: #28a745;">gamma rays</span> as they pass through a magnetic field. This Virtual lab  introduces three  particles: <strong>alpha</strong> (α), <strong>beta</strong> (β), and <strong>gamma</strong> (γ), each  with unique charges and masses. By controlling the magnetic field strength through a slider and starting the simulation with the "Start" button, observe trajectories influenced by the <em>Lorentz force.</em>The detector shows the type of particle and the amout by which its has been deflected. By adjusting the strength of Magnetic Field you can get different displacements</p>
     </div>
 		</div>
 		<div class="col-8">
 		<canvas id="radiationCanvas" width="900" height="600" class="border"></canvas>
 		</div>
 		</div>
-		
-
-
     </div>
-
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <script>
-        const canvas = document.getElementById('radiationCanvas');
+               const canvas = document.getElementById('radiationCanvas');
         const ctx = canvas.getContext('2d');
 function drawGrid() {
 ctx.strokeStyle = 'lightgray';
@@ -182,19 +186,21 @@ ctx.strokeSize = 0.5;
 
         function drawMagneticField() {
             ctx.fillStyle = 'blue'; // North Pole
-            ctx.fillRect(290, magneticFieldStartY, 200, poleWidth);
+            ctx.fillRect(280, magneticFieldStartY, 220, poleWidth);
 
             ctx.fillStyle = 'red'; // South Pole
-            ctx.fillRect(290, magneticFieldEndY - poleWidth, 200, poleWidth);
+            ctx.fillRect(280, magneticFieldEndY - poleWidth, 220, poleWidth);
 
-            ctx.fillStyle = 'brown'; // South Pole
-            ctx.fillRect(700, 0, 2, 700);
-			ctx.fillStyle = 'pink';
+            ctx.fillStyle = 'gold'; // South Pole
+            ctx.fillRect(700, 0, 20, 700);
+			ctx.fillStyle = "rgba(0, 0, 0, 0.05)"; // Blue color with 50% transparency
+            ctx.fillRect(0, 0, 800, 700);
+			ctx.fillStyle = 'white';
             ctx.font = '16px Arial';
-            ctx.fillText("North Pole", 350, 180);
-            ctx.fillText("South Pole", 350, 430);
-			ctx.fillStyle = 'darkred';
-            ctx.fillText("Detector", 710, 200);
+            ctx.fillText("North Pole", 400, 180);
+            ctx.fillText("South Pole", 400, 430);
+			ctx.fillStyle = 'darkblue';
+            ctx.fillText("Detector", 740, 300);
         }
 
         const lineLength = 200;
@@ -216,7 +222,7 @@ ctx.strokeSize = 0.5;
         }
 
         function drawArrowLines() {
-            ctx.strokeStyle = 'lightpink';
+            ctx.strokeStyle = 'lightwhite';
             //ctx.fillStyle = 'lightblue';
 
             for (let i = 0; i < numLines; i++) {
@@ -248,8 +254,6 @@ function draw() {
         alphaParticle.draw('red');
         betaParticle.draw('blue');
         gammaPhoton.draw('green');
-    </script>
-    <script>
         // Get the input element and the span for the field strength
         var slider = document.getElementById('magneticFieldStrength');
         var fieldStrength = document.getElementById('fieldStrength');
