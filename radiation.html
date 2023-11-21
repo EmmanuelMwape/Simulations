@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Alpha,beta and Gamma Radiation Simulation</title>
+</head>
+<body class="bg-white">
+    <div class="container mt-2">
+       <div class="text-center bg-light"> <h3 class="mb-0"><span class="text-danger">Alpha</span> <span class="text-info">Beta </span> and <span class="text-warning">Gamma </span> rays in magnetic fields.</h3></div>
+        <div class="row">
+  
+        <div class="col-4">
+    <label for="magneticFieldStrength" class="mt-3">Magnetic Field Strength:</label><b><span id="fieldStrength" style="display: ; width: 30px; height: 30px; background: #00f; border-radius: 50%; margin-left: 10px;color: #fff">1</span></b>
+    <input type="range" id="magneticFieldStrength" min="0" max="2" step="0.1" value="1" class="form-control">
+    
+        <button id="startButton" class="btn btn-primary mt-3">Start</button>
+        <button id="resetButton" class="btn btn-warning mt-3">Reset</button>
+		<hr>
+<div id="simulation-description">
+        <h4>The Radiation Simulation</h4>
+        <p>Explore the behaviour of <span style="color: #dc3545;">alpha</span>, <span style="color: #007bff;">beta</span>, and <span style="color: #28a745;">gamma rays</span> as they pass through a magnetic field. This Virtual lab  introduces three  particles: <strong>alpha</strong> (α), <strong>beta</strong> (β), and <strong>gamma</strong> (γ), each  with unique charges and masses. By controlling the magnetic field strength through a slider and starting the simulation with the "Start" button, observe trajectories influenced by the <em>Lorentz force</em></p>
+    </div>
+		</div>
+		<div class="col-8">
+		<canvas id="radiationCanvas" width="900" height="600" class="border"></canvas>
+		</div>
+		</div>
+		
+
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        const canvas = document.getElementById('radiationCanvas');
+        const ctx = canvas.getContext('2d');
+function drawGrid() {
+ctx.strokeStyle = 'lightgray';
+ctx.strokeSize = 0.5;
+            // Draw horizontal grid lines
+            for (var y = 0; y <= 600; y += 20) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(900, y);
+                ctx.stroke();
+            }
+
+            // Draw vertical grid lines
+            for (var x = 0; x <= 900; x += 20) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, 600);
+                ctx.stroke();
+            }
+
+            // Draw the center line representing the x-axis
+            ctx.beginPath();
+            ctx.moveTo(0, 300);
+            ctx.lineTo(700, 300);
+            ctx.strokeStyle = 'red'; // Customize the color of the x-axis
+            ctx.stroke();
+        }
+      // Call the drawGrid function
+        drawGrid();
+        const particleRadius = 10;
+        let magneticFieldStrength = 1;
+        let poleWidth = 50;
+        let magnetDistance = 200;
+        let isRunning = false;
+
+        const magneticFieldStartY = 150;
+        const magneticFieldEndY = 450;
+
+        class Particle {
+            constructor(x, y, charge, mass, name) {
+                this.x = x;
+                this.y = y;
+                this.charge = charge;
+                this.mass = mass;
+                this.inMagneticField = false;
+                this.velocity = { x: 3.5, y: 0 }; // Initial velocity
+                this.stopped = false;
+                this.name = name;
+                this.trail = [];
+            }
+
+            updatePosition() {
+                if (this.stopped) return;
+
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+
+                if (this.y > magneticFieldStartY && this.y < magneticFieldEndY) {
+                    this.inMagneticField = true;
+                } else {
+                    this.inMagneticField = false;
+                }
+
+                if (this.inMagneticField && this.x > 300) {
+                    const magneticForce = this.charge * this.velocity.x * magneticFieldStrength;
+                    var v = 0.01 * magneticForce / this.mass;
+                    if (this.mass == 0) {
+                        v = 0;
+                    }
+                    this.velocity.y += v;
+                }
+
+                if (this.x + particleRadius >= 700) {
+                    this.stopped = true;
+					
+                    return;
+                }
+
+                // Store the current position in the trail
+                this.trail.push({ x: this.x, y: this.y });
+
+                // Keep only the last 100 positions in the trail
+                if (this.trail.length > 200) {
+                    this.trail.shift();
+                }
+            }
+
+            draw(color) {
+                // Draw the trail
+                ctx.fillStyle = color;
+                for (const point of this.trail) {
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, 1, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+
+                // Draw the current position
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, particleRadius, 0, 2 * Math.PI);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = 'white';
+                ctx.font = '14px Arial';
+                ctx.fillText(`${this.name}`, this.x-3 , this.y+4);
+				ctx.fillStyle = 'red';
+                ctx.fillText(`${(300-this.y).toFixed(0)}`, this.x-45 , this.y+5);
+            }
+        }
+
+        const alphaParticle = new Particle(50, 250, 2, 4, "a");
+        const betaParticle = new Particle(50, 350, -1, 1, "b");
+        const gammaPhoton = new Particle(50, 300, 0, 0, "y");
+
+        const magneticFieldStrengthInput = document.getElementById('magneticFieldStrength');
+        const poleWidthInput = document.getElementById('poleWidth');
+        const startButton = document.getElementById('startButton');
+
+        magneticFieldStrengthInput.addEventListener('input', function () {
+            magneticFieldStrength = parseFloat(this.value);
+            updateMagnets();
+        });
+
+        startButton.addEventListener('click', function () {
+			
+            updateMagnets();
+            draw();
+			drawGrid();
+        });
+        resetButton.addEventListener('click', function () {
+			location.reload();
+        });
+
+        function updateMagnets() {
+            if (isRunning) {
+                magnetDistance = 200 - magneticFieldStrength * 50;
+            } else {
+                magnetDistance = 200;
+            }
+        }
+
+        function drawMagneticField() {
+            ctx.fillStyle = 'blue'; // North Pole
+            ctx.fillRect(290, magneticFieldStartY, 200, poleWidth);
+
+            ctx.fillStyle = 'red'; // South Pole
+            ctx.fillRect(290, magneticFieldEndY - poleWidth, 200, poleWidth);
+
+            ctx.fillStyle = 'brown'; // South Pole
+            ctx.fillRect(700, 0, 2, 700);
+			ctx.fillStyle = 'pink';
+            ctx.font = '16px Arial';
+            ctx.fillText("North Pole", 350, 180);
+            ctx.fillText("South Pole", 350, 430);
+			ctx.fillStyle = 'darkred';
+            ctx.fillText("Detector", 710, 200);
+        }
+
+        const lineLength = 200;
+        const arrowSize = 5;
+        const lineSpacing = 5;
+        const numLines = 40;
+
+        function drawArrowLine(x, y) {
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, y + lineLength);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x, y + lineLength);
+            ctx.lineTo(x - arrowSize / 2, y + lineLength - arrowSize);
+            ctx.lineTo(x + arrowSize / 2, y + lineLength - arrowSize);
+            ctx.fill();
+        }
+
+        function drawArrowLines() {
+            ctx.strokeStyle = 'lightpink';
+            //ctx.fillStyle = 'lightblue';
+
+            for (let i = 0; i < numLines; i++) {
+                const x = (i + 59) * lineSpacing;
+                drawArrowLine(x, 200);
+            }
+        }
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawGrid(); // Redraw the grid lines
+    drawMagneticField();
+    drawArrowLines();
+
+    alphaParticle.updatePosition();
+    betaParticle.updatePosition();
+    gammaPhoton.updatePosition();
+
+    alphaParticle.draw('red');
+    betaParticle.draw('blue');
+    gammaPhoton.draw('green');
+
+    requestAnimationFrame(draw);
+}
+
+        drawMagneticField();
+        drawArrowLines();
+        alphaParticle.draw('red');
+        betaParticle.draw('blue');
+        gammaPhoton.draw('green');
+    </script>
+    <script>
+        // Get the input element and the span for the field strength
+        var slider = document.getElementById('magneticFieldStrength');
+        var fieldStrength = document.getElementById('fieldStrength');
+
+        // Update the position of the circle based on the slider value
+        slider.addEventListener('input', function () {
+            var sliderValue = slider.value;
+            var position = (sliderValue / (slider.max - slider.min)) * slider.offsetWidth;
+            fieldStrength.style.left = position + 'px';
+            fieldStrength.innerHTML = sliderValue;
+        });
+    </script>
+</body>
+</html>
