@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bacterial Growth Simulation</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    canvas {
+      border: 1px solid #ddd;
+    }
+    .random-image {
+      display: flex;
+      transition: transform 0.5s ease-in-out;
+    }
+
+    #imageContainer {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      background: linear-gradient(to right, #f0f0f0, #00aaff); /* Gradient background */
+      position: relative;
+      border-radius: 5px;
+	  height:350px;
+	  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add a box shadow */
+    }
+#colonyPopulation {
+  align-items: center;
+  justify-content: center;
+  width: 100px; /* Adjust the width as needed */
+  height: 100px; /* Adjust the height as needed */
+  background-color: #fff; /* Set the background color */
+  border: 2px solid #ccc; /* Set the border */
+  border-radius: 8px; /* Set the border-radius for rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add a box shadow */
+  font-size:20px;
+  align-items: center;
+  color:red;
+}
+#colonyGeneartions {
+  align-items: center;
+  justify-content: center;
+  width: 100px; /* Adjust the width as needed */
+  height: 100px; /* Adjust the height as needed */
+  background-color: #fff; /* Set the background color */
+  border: 2px solid #ccc; /* Set the border */
+  border-radius: 8px; /* Set the border-radius for rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add a box shadow */
+  font-size:20px;
+  align-items: center;
+  color:red;
+}
+  </style>
+</head>
+<body>
+  <div class="ml-4">
+    <div class="row">
+      <!-- Left Column: Graph -->
+      <div class="col-md-6 text-center">
+        <h5>Bacteria Growth Curve</h5>
+        <canvas id="graphCanvas" width="500" height="400"></canvas>
+      </div>
+
+      <!-- Right Column: Controls -->
+      <div class="col-md-6 text-center">
+        <label for="growthRateInput">Max Population: <span id="colonyMax" class="cardReader"></span></label>
+        <input type="range" id="maxCapacityId" step="2" value="16" min="16" max="64">
+        <button id="simulateColony" class="btn btn-info">Start Simulation</button>
+		<button id="resetSimulation" class="btn btn-warning">Reset Simulation</button>
+		<hr>
+        <h5>Baterial Colony Growth Simulation </h5>
+		<span class="cardReader">Population(N): <span id="colonyPopulation" class="cardReader"></span></span>
+		<span class="cardReader">Generation(nth): <span id="colonyGeneartions" class="cardReader"></span></span>
+		
+		
+		 <div id="imageContainer" class="container bg-light"></div>
+		 
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const yCount = document.getElementById('colonyPopulation');
+      const xGeneration = document.getElementById('colonyGeneartions');
+      const colonymaxCapacity = document.getElementById('maxCapacity');
+      const canvas = document.getElementById('graphCanvas');
+      const ctx = canvas.getContext('2d');
+	  var maxCapacity;
+     let imageCount = 1;
+     let animationId;
+      function clearImageContainer() {
+        const imageContainer = document.getElementById('imageContainer');
+        while (imageContainer.firstChild) {
+          imageContainer.removeChild(imageContainer.firstChild);
+        }
+      }
+// Draw grid
+        drawGrid();
+	 function drawAxes(){
+        // Draw axes and labels
+        ctx.beginPath();
+        ctx.moveTo(40, 0);
+        ctx.lineTo(40, canvas.height);
+        ctx.strokeStyle = 'blue';
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(20 , canvas.height-40);
+        ctx.lineTo(canvas.width, 360);
+        ctx.strokeStyle = 'red';
+        ctx.stroke();
+
+        ctx.fillStyle = 'black';
+        ctx.font = '14px Arial';
+        ctx.fillText('Time', canvas.width/2, 380);
+        ctx.save();
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillStyle = 'black';
+        ctx.font = '14px Arial';
+        ctx.fillText('Population', -canvas.height / 2, 10);
+        ctx.restore();
+	}
+	drawAxes()
+      function drawGraph(growthRate) {
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw grid
+        drawGrid();
+
+        drawAxes()
+
+        // Simulation parameters
+        const initialPopulation = 1;
+        let currentTime = 0;
+        const timeInterval = 2
+	    
+        ctx.beginPath();
+        ctx.moveTo(40, 350);
+
+        while (currentTime <= 20) {
+          const population = initialPopulation * Math.exp(growthRate * currentTime);
+          const x = currentTime * 20+40; // Adjust for time scale
+          const y = canvas.height- population * 50; // Adjust for population scale
+          ctx.lineTo(x, y);
+		  ctx.fillStyle = 'green';
+          ctx.font = '14px Arial';
+          ctx.fillText(population.toFixed(2), 20, y)
+          currentTime += timeInterval;
+		  ctx.arc(x, y, 5, 0, 2 * Math.PI);
+          //ctx.fill()
+        }
+
+        ctx.strokeStyle = 'blue';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+var i=0;
+      function drawGrid() {
+        const gridSpacingX = 20;
+        const gridSpacingY = 20;
+
+        ctx.beginPath();
+
+        // Draw horizontal grid lines
+        for (let y = gridSpacingY; y < canvas.height; y += gridSpacingY) {
+		i++;
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y);
+		  ctx.fillText(i, 40+i*100, 375)
+        }
+
+        // Draw vertical grid lines
+        for (let x = gridSpacingX; x < canvas.width; x += gridSpacingX) {
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+        }
+
+        ctx.strokeStyle = '#ddd';
+        ctx.stroke();
+      }
+
+      // Event listener for the Start Simulation button
+      document.getElementById('simulateColony').addEventListener('click', function () {
+         maxCapacity = document.getElementById('maxCapacityId').value;
+        runsimulation();
+      });
+
+      // Event listener for the Reset Simulation button
+      document.getElementById('resetSimulation').addEventListener('click', function () {
+        // Reset simulation parameters and clear canvas
+        cancelAnimationFrame(animationId);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+		drawGrid();
+		drawAxes();
+        imageCount = 1;
+        maxCapacity = document.getElementById('maxCapacityId').value;
+        colonyMaxSpan.innerText = maxCapacity;
+        clearImageContainer();
+      });
+function runsimulation(){
+var generation=1;
+
+      // Set the stroke color and width
+      ctx.strokeStyle = 'blue';
+      ctx.lineWidth = 2;
+    function addImage(container) {
+	yCount.innerText=imageCount;
+	var gex=Math.log(imageCount) / Math.log(2);
+	xGeneration.innerText = gex.toFixed(2);
+
+	      // Draw the circle
+      ctx.beginPath();
+	  ctx.arc(45+gex*100, 360-imageCount*20, 2, 0, 2 * Math.PI);
+	  ctx.fillText(imageCount.toFixed(0), 20, 365-imageCount*20)
+      ctx.stroke();
+	
+	console.log(imageCount,gex);
+      if (imageCount == maxCapacity) {
+	  image.style.width = `${maxWidth}px`;
+        cancelAnimationFrame(animationId);
+		//clearInterval(intervalId);
+        return;
+      }
+
+      const newImage = document.createElement('img');
+      newImage.src = 'bact.png';
+      newImage.alt = `Image ${imageCount}`;
+      newImage.className = 'random-image';
+      container.appendChild(newImage);
+      imageCount += 1;
+
+      // Apply random rotation to the new image
+      applyRandomRotation(newImage);
+
+      // Start animation for the new image
+      linearChangeWidth(newImage);
+    }
+
+    function applyRandomRotation(image) {
+      const randomRotation = Math.random() * 360; // Random angle between 0 and 360 degrees
+      image.style.transform = `rotate(${randomRotation}deg)`;
+    }
+
+    function linearChangeWidth(image) {
+      let currentWidth = 30;
+      const maxWidth = 60;
+
+      function animate() {
+        if (currentWidth < maxWidth) {
+          image.style.width = `${currentWidth}px`;
+          currentWidth +=0.1;
+          animationId = requestAnimationFrame(animate);
+        } else {
+		
+          currentWidth = 30;
+          image.style.width = `${currentWidth}px`;
+          // Add a new image when width reaches or exceeds maxWidth
+          addImage(image.parentNode);
+          animate();
+        }
+      }
+		if (currentWidth >= maxWidth) {generation+=1;}
+      animate();
+    }
+
+    // Change width linearly for the first image
+    addImage(document.getElementById('imageContainer'));
+	}
+    });
+	
+  </script>
+ <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const slider = document.getElementById('maxCapacityId');
+      const colonyMaxSpan = document.getElementById('colonyMax');
+
+      // Update the span when the slider value changes
+      slider.addEventListener('input', function () {
+        colonyMaxSpan.innerText = slider.value;
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radioactive Decay Simulation</title>
+  <!-- Add Bootstrap CSS link -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    canvas {
+      border: 1px solid #000;
+    }
+
+    /* Additional custom styles if needed */
+    body {
+      padding: 20px;
+    }
+    .container {
+      position: relative;
+      width: 300px;
+    }
+
+    img {
+      width: 100%;
+      height: auto;
+    }
+
+    .overlay {
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 10px;
+      border-radius: 5px;
+    }
+.imgC{
+      position: absolute;
+      top: 10%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 10px;
+      border-radius: 5px;
+	  width:150px;
+	  heght:150px;
+}
+  </style>
+</head>
+<body>
+  <div class="container text-center">
+    <h3 class="">Radioactive Decay Simulation</h3>
+  </div>
+  <div class="row">
+  <div class="col-sm-9">
+      <input type="number" class="" id="halfLifeInput" placeholder="Half-Life(Seconds)">
+    <input type="number" class="" id="massInput" placeholder="Half-Life(Seconds)" >
+    <button class="btn btn-primary btn-sm" id="startButton">Start Simulation</button>
+    <button class="btn btn-danger btn-sm" id="resetButton">Stop</button>
+     
+    <canvas class="" id="decayCanvas" width="1100" height="550"></canvas>
+	    <table class="table table-bordered " id="myTable">
+        <tr id="timeLog">
+          <th>Time</th>
+        </tr>
+        <tr id="massLog">
+          <th>Mass</th>
+        </tr>
+    </table>
+	</div> 
+	<div class="col-sm-3">
+	<div class="container">
+   <div id="rd" class="imgC"><img class="imgC"src="rd.png"></div>
+   <img src="weightscale.jpg">
+	  <canvas id="rectangleCanvas" width="300" height="300"></canvas>
+	 <div class="overlay"><span id="massRemaining">00</span></div>
+	</div>
+  </div>
+  </div>
+<script>
+  const massRemaining = document.getElementById('massRemaining');
+  const halfLifeInput = document.getElementById('halfLifeInput');
+  const startButton = document.getElementById('startButton');
+  const massInput = document.getElementById('massInput');
+  const canvas = document.getElementById('decayCanvas');
+  const rectcanvas = document.getElementById('rectangleCanvas');
+  const ctx1 = rectcanvas.getContext('2d');
+  const table = document.getElementById('myTable');
+  const ctx = canvas.getContext('2d');
+  const timeLogRow = document.getElementById('timeLog');
+  const massLogRow = document.getElementById('massLog');
+  const decayData = [];
+
+  let initialMass;
+  let currentTime = 0;
+
+  function drawGrids() {
+    const numGridLinesX = 40;
+    const numGridLinesY = 20;
+
+    // Draw horizontal grid lines
+    for (let i = 1; i < numGridLinesY; i++) {
+      const y = (canvas.height / numGridLinesY) * i;
+      drawHorizontalLine(0, y, canvas.width, y, '#ddd');
+    }
+
+    // Draw vertical grid lines
+    for (let i = 1; i < numGridLinesX; i++) {
+      const x = (canvas.width / numGridLinesX) * i;
+      drawVerticalLine(x, 0, x, canvas.height, '#ddd');
+    }
+
+    drawXAxis();
+    drawYAxis();
+  }
+
+  function drawHorizontalLine(startX, startY, endX, endY, color) {
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.strokeStyle = color;
+    ctx.stroke();
+  }
+
+  function drawVerticalLine(startX, startY, endX, endY, color) {
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.strokeStyle = color;
+    ctx.stroke();
+  }
+
+  function drawXAxis() {
+    ctx.beginPath();
+    ctx.moveTo(0, 480);
+    ctx.lineTo(canvas.width, 480);
+    ctx.fillText('Time', 550, 520);
+    ctx.strokeStyle = 'red';
+    ctx.stroke();
+  }
+
+  function drawYAxis() {
+    ctx.beginPath();
+    ctx.moveTo(50, 0);
+    ctx.lineTo(50, canvas.height);
+    ctx.fillText('Mass', 4, 250);
+    ctx.strokeStyle = 'red';
+    ctx.stroke();
+  }
+
+  function radioactiveDecaySimulation(halfLife, totalTime) {
+    initialMass = parseFloat(massInput.value);
+    let currentMass = initialMass;
+
+    while (currentTime <= totalTime) {
+      decayData.push({ time: currentTime, mass: currentMass });
+
+      appendTd(timeLogRow, currentTime);
+      appendTd(massLogRow, currentMass.toFixed(3));
+
+      const decayedMass = currentMass / 2;
+      currentMass = decayedMass;
+      currentTime += halfLife;
+    }
+
+    return decayData;
+  }
+
+  function drawGraph(decayData, elapsed) {
+    const maxMass = Math.max(...decayData.map(data => data.mass));
+    const timeScale = 50;
+    const massScale = canvas.height / maxMass;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawGrids();
+
+    ctx.beginPath();
+    let isFirstPoint = true;
+    decayData.forEach(data => {
+      if (data.time <= elapsed) {
+        const x = data.time * timeScale;
+        const y = 360 - data.mass * massScale;
+
+        if (isFirstPoint) {
+          ctx.moveTo(x + 40, y + 100);
+          isFirstPoint = false;
+        } else {
+          ctx.lineTo(x + 40, y + 100);
+        }
+
+        ctx.fillStyle = 'black';
+        ctx.font = '14px Arial';
+        ctx.fillText(`${data.mass.toFixed(2)}`, x + 45, y + 100);
+        ctx.fillStyle = 'blue';
+        ctx.fillText(`${data.time}`, x + 25, 495);
+        ctx.fillStyle = 'red';
+        ctx.arc(x + 40, y + 100, 3, 0, 2 * Math.PI);
+			       // Call drawCircles with the currentMass
+      drawCircles(data.mass.toFixed(0));
+	  massRemaining.innerText=data.mass.toFixed(3);
+// Update the "rd" div dimensions based on the mass value
+      document.getElementById("rd").style.width = `${(data.mass.toFixed(3))}px`;
+      document.getElementById("rd").style.height = `${(data.mass.toFixed(3))}px`;
+
+      // Assuming there's an image inside the "rd" div, update its dimensions
+      const rdImage = document.querySelector('#rd img');
+      if (rdImage) {
+        rdImage.style.width = '100%';
+        rdImage.style.height = '100%';
+      }
+      }
+    });
+
+    ctx.strokeStyle = '#007BFF';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  function drawCircle(x, y, radius, color) {
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+
+  function startSimulation() {
+    const halfLife = parseFloat(halfLifeInput.value);
+    const totalTime = 20;
+
+    const decayData = radioactiveDecaySimulation(halfLife, totalTime);
+
+    let startTime;
+    function animate(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const elapsed = (timestamp - startTime) / 1000;
+
+      drawGraph(decayData, elapsed);
+
+
+      if (elapsed < totalTime) {
+        requestAnimationFrame(animate);
+      }
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  startButton.addEventListener('click', function() {
+  // Check if mass and time values are not null or 0
+  const massValue = parseFloat(massInput.value);
+  const timeValue = parseFloat(halfLifeInput.value);
+
+  if (massValue && timeValue) {
+    // Call startSimulation only if mass and time values are valid
+    startSimulation();
+  } else {
+    // Handle the case where mass or time values are invalid
+    alert('Please enter valid values for mass and time.');
+  }
+});
+
+
+  function addRow(timeR, massR) {
+    const newRow = table.insertRow();
+    const cell1 = newRow.insertCell(0);
+    const cell2 = newRow.insertCell(1);
+    cell1.innerHTML = timeR;
+    cell2.innerHTML = massR;
+  }
+
+  // Function to append td to a given tr
+  function appendTd(trElement, content) {
+    const tdElement = document.createElement('td');
+    tdElement.textContent = content;
+    trElement.appendChild(tdElement);
+  }
+
+  drawGrids();
+ // Function to draw a filled circle with an ID
+      function drawFilledCircle(x, y, radius, color, id) {
+        ctx1.beginPath();
+        ctx1.arc(x, y, radius, 0, 2 * Math.PI);
+        ctx1.fillStyle = color;
+        ctx1.fill();
+
+        // Assign a dynamic ID to the circle
+        ctx1.font = '12px Arial';
+        ctx1.fillStyle = 'black';
+      }
+
+      // Function to draw circles in a grid
+      function drawCircles(N) {
+        const rectangleWidth = canvas.width;
+        const rectangleHeight = canvas.height;
+        const circlesPerRow = 15;
+        const circleRadius = 10;
+
+        ctx1.clearRect(0, 0, canvas.width, canvas.height);
+        ctx1.strokeRect(0, 0, rectangleWidth, rectangleHeight);
+
+        for (let i = 0; i < N; i++) {
+          const col = i % circlesPerRow;
+          const row = Math.floor(i / circlesPerRow);
+          const x = col * 2 * circleRadius + circleRadius;
+          const y = row * 2 * circleRadius + circleRadius;
+          const id = `Circle${i + 1}`;
+          drawFilledCircle(x, y, circleRadius, 'blue', id);
+        }
+      }
+</script>
+  <!-- Add Bootstrap JS and Popper.js scripts -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+  <!-- Your existing script goes here -->
+
+</body>
+</html>
